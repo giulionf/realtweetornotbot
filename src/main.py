@@ -43,7 +43,7 @@ NO_USER_ERROR = config['ERROR']['no_user']
 LOW_MATCH_ERROR = config['ERROR']['low_match']
 
 # Subreddit to operate in
-SUBREDDIT = "realtweetornotbot"
+SUBREDDIT = "realtweetornotbot+me_irl"
 
 # Types of images that can be processed
 ALLOWED_IMAGE_TYPES = ["jpg", "png", "jpeg"]

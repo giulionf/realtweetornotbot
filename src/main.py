@@ -24,6 +24,7 @@ USER_AGENT = os.environ['REDDIT_USER_AGENT']
 # Bot Data
 CREATOR_NAME = config['BOTDATA']['creator']
 KEYWORD = config['BOTDATA']['keyword']
+SUBREDDITS = config['BOTDATA']['SUBREDDITS']
 
 # Links
 DONATE_LINK = config['LINKS']['donate']
@@ -41,9 +42,6 @@ ERROR_MESSAGE = config['MESSAGE']['error_occured']
 NO_DATE_ERROR = config['ERROR']['no_date']
 NO_USER_ERROR = config['ERROR']['no_user']
 LOW_MATCH_ERROR = config['ERROR']['low_match']
-
-# Subreddit to operate in
-SUBREDDIT = "realtweetornotbot+me_irl"
 
 # Types of images that can be processed
 ALLOWED_IMAGE_TYPES = ["jpg", "png", "jpeg"]
@@ -68,7 +66,7 @@ def main():
 
 def bot_loop_local():
     print("STARTING BOT LOCALY")
-    for comment in __client.subreddit(SUBREDDIT).stream.comments():
+    for comment in __client.subreddit(SUBREDDITS).stream.comments():
         if should_summon(comment):
             on_summon(comment)
             comment.save()
@@ -76,7 +74,7 @@ def bot_loop_local():
 
 def bot_loop_remote():
     print("STARTING BOT ON REMOTE SERVER")
-    for comment in __client.subreddit(SUBREDDIT).stream.comments():
+    for comment in __client.subreddit(SUBREDDITS).stream.comments():
         if should_summon(comment):
             on_summon(comment)
             comment.save()

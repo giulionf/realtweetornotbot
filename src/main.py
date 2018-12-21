@@ -82,7 +82,7 @@ def bot_loop_remote():
 
 def on_summon(comment):
     url = get_submission_link(comment)
-    print("New Comment From: {}".format(comment.author.name))
+    print("New Comment From: {} in {}".format(comment.author.name, comment.subreddit.display_name))
     if url is not None:
         try_repeatedly_with_timeout(lambda: write_reply(comment, url))
 
@@ -107,6 +107,7 @@ def write_reply(comment, url):
         parameters = CommandUtils.get_comment_parameters(comment.body)
         results = TweetFinder.find_tweet_results(url, parameters)
         comment.reply(form_comment_response(results))
+    print("Done writing reply")
 
 
 def send_pm_with_error_to_creator(error):

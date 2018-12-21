@@ -1,0 +1,4 @@
+## IDEA Cache Stuff
+.idea/*
+venv/
+*__pycache__*

@@ -1,20 +1,20 @@
-import GetOldTweets3
+import GetOldTweets3 as got3
 from datetime import datetime
 from fuzzywuzzy import fuzz
 from realtweetornotbot.ocr.imageprocessor import ImageProcessor
 from realtweetornotbot.ocr.textprocessor import TextProcessor
 from realtweetornotbot.result.result import SearchResult
 
-TWEET_MAX_AMOUNT = 0
+TWEET_MAX_AMOUNT = 100000
+MAX_RETRIES = 5
 
 
 class TweetFinder:
 
     @staticmethod
-    def find_tweet_results(url, parameters):
-        candidates = TweetFinder.__get_candidates(url, parameters)
-        results = list(map(TweetFinder.__search_tweet_for_candidate, candidates))
-        results = list(filter(None, results))
+    def find_tweet_results(comment, parameters):
+        candidates = TweetFinder.__get_candidates(comment.submission.url, parameters)
+        results = TweetFinder.__get_results(candidates)
         return results
 
     @staticmethod
@@ -24,9 +24,18 @@ class TweetFinder:
         return candidates
 
     @staticmethod
+    def __get_results(candidates):
+        tries = 0
+        results = []
+        while tries < MAX_RETRIES and len(results) == 0:
+            results = list(map(TweetFinder.__search_tweet_for_candidate, candidates))
+            results = list(filter(None, results))
+            tries += 1
+        return results
+
+    @staticmethod
     def __search_tweet_for_candidate(candidate):
-        got3_criteria = GetOldTweets3.manager.TweetCriteria() \
-            .setWithin('') \
+        got3_criteria = got3.manager.TweetCriteria() \
             .setMaxTweets(TWEET_MAX_AMOUNT)
         if candidate.date:
             got3_criteria.setSince(candidate.format_from_date()) \
@@ -36,14 +45,14 @@ class TweetFinder:
         if candidate.content:
             got3_criteria.setQuerySearch(candidate.format_content_to_or_query())
 
-        tweets = GetOldTweets3.manager.TweetManager.getTweets(got3_criteria)
+        tweets = got3.manager.TweetManager.getTweets(got3_criteria)
         sorted_tweets = sorted(tweets, reverse=True, key=lambda tweet: TweetFinder.__score_result(tweet, candidate))
 
         if len(sorted_tweets) > 0:
             tweet = sorted_tweets[0]
             return SearchResult(candidate, tweet, TweetFinder.__score_result(tweet, candidate))
         else:
-            return None
+            return []
 
     @staticmethod
     def __score_result(tweet, candidate):

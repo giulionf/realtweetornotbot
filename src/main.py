@@ -4,6 +4,7 @@ import praw
 import time
 import traceback
 import configparser
+import concurrent.futures
 from configparser import ExtendedInterpolation
 from praw import exceptions
 from realtweetornotbot.twitter.tweetfinder import TweetFinder
@@ -53,8 +54,8 @@ ATTEMPT_TIMEOUT = 5
 NO_NEW_COMMENT_TIMEOUT = 10 * 60  # in seconds
 
 # Praw Client
-__client = praw.Reddit(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, user_agent=USER_AGENT, username=USERNAME,
-                       password=PASSWORD)
+praw_client = praw.Reddit(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, user_agent=USER_AGENT, username=USERNAME,
+                          password=PASSWORD)
 
 
 def main():
@@ -65,26 +66,51 @@ def main():
 
 
 def bot_loop_local():
-    print("STARTING BOT LOCALY")
-    for comment in __client.subreddit(SUBREDDITS).stream.comments():
+    print("STARTING BOT LOCALLY")
+    for comment in praw_client.subreddit(SUBREDDITS).stream.comments():
         if should_summon(comment):
             on_summon(comment)
-            comment.save()
 
 
 def bot_loop_remote():
     print("STARTING BOT ON REMOTE SERVER")
-    for comment in __client.subreddit(SUBREDDITS).stream.comments():
+    for comment in praw_client.subreddit(SUBREDDITS).stream.comments():
         if should_summon(comment):
             on_summon(comment)
-            comment.save()
 
 
 def on_summon(comment):
-    url = get_submission_link(comment)
     print("New Comment From: {} in {}".format(comment.author.name, comment.subreddit.display_name))
-    if url is not None:
-        try_repeatedly_with_timeout(lambda: write_reply(comment, url))
+    if comment.submission.url is not None:
+        on_new_comment(comment)
+
+
+def on_new_comment(comment):
+    if not is_image_submission(comment.submission.url):
+        answer_comment_wrong_post_type(comment)
+    else:
+        print("Worker is dispatched")
+        future_result = workers.submit(search_tweets, comment)
+        concurrent.futures.Future.add_done_callback(future_result, lambda x: on_new_result(comment, x.result()))
+
+
+def on_new_result(comment, results):
+    print("Worker Done: Trying to reply to {} in {}".format(comment.author.name, comment.subreddit.display_name))
+    response = form_comment_response(results)
+    try_repeatedly_with_timeout(lambda:  comment.reply(response))
+    comment.save()
+
+
+def answer_comment_wrong_post_type(comment):
+    print("start answering comment from {} in {}".format(comment.author.name, comment.subreddit.display_name))
+    try_repeatedly_with_timeout(lambda: comment.reply(WRONG_POST_TYPE_MESSAGE))
+    comment.save()
+
+
+def search_tweets(comment):
+    parameters = CommandUtils.get_comment_parameters(comment.body)
+    results = TweetFinder.find_tweet_results(comment, parameters)
+    return results
 
 
 def should_summon(comment):
@@ -99,23 +125,12 @@ def is_comment_from_bot(comment):
     return str.lower(comment.author.name) == USERNAME
 
 
-def write_reply(comment, url):
-    print("Writing reply")
-    if not is_image_submission(url):
-        comment.reply(WRONG_POST_TYPE_MESSAGE)
-    else:
-        parameters = CommandUtils.get_comment_parameters(comment.body)
-        results = TweetFinder.find_tweet_results(url, parameters)
-        comment.reply(form_comment_response(results))
-    print("Done writing reply")
-
-
 def send_pm_with_error_to_creator(error):
-    last_100_pms = __client.inbox.sent(limit=100)
+    last_100_pms = praw_client.inbox.sent(limit=100)
     is_old_error = any(pm.body == str(error) for pm in last_100_pms)
 
     if not is_old_error:
-        __client.redditor(CREATOR_NAME).message("New error", str(error))
+        praw_client.redditor(CREATOR_NAME).message("New error", str(error))
 
 
 def try_repeatedly_with_timeout(func):
@@ -173,13 +188,10 @@ def create_single_link_to_tweet(index, result):
     return SINGLE_TWEET.format(index + 1, result.tweet.username, result.score, result.tweet.permalink) + "\n"
 
 
-def get_submission_link(comment):
-    return comment.submission.url
-
-
 def is_run_locally():
     return len(sys.argv) > 1 and sys.argv[1] == "local"
 
 
 if __name__ == "__main__":
+    workers = concurrent.futures.ThreadPoolExecutor()
     main()

@@ -27,8 +27,6 @@ class ImageProcessor:
     def __optimize(image):
         image = image.convert('L')
         image = ImageProcessor.__scale_to_working_size(image)
-        image = image.point(lambda p: p > PIXEL_BINARY_THRESHOLD and 255)
-        # image = image.filter(ImageFilter.EDGE_ENHANCE)
         return image
 
     @staticmethod

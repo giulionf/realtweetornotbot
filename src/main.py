@@ -48,7 +48,8 @@ LOW_MATCH_ERROR = config['ERROR']['low_match']
 ALLOWED_IMAGE_TYPES = ["jpg", "png", "jpeg"]
 
 # Time to wait after a response request was denied until retrying
-ATTEMPT_TIMEOUT = 5
+ATTEMPT_TIMEOUT = 30
+MAX_TIMEOUT = 11 * 60
 
 # Timeout after last comment streamed for remote hosting
 NO_NEW_COMMENT_TIMEOUT = 10 * 60  # in seconds
@@ -97,14 +98,21 @@ def on_new_comment(comment):
 def on_new_result(comment, results):
     print("Worker Done: Trying to reply to {} in {}".format(comment.author.name, comment.subreddit.display_name))
     response = form_comment_response(results)
-    try_repeatedly_with_timeout(lambda:  comment.reply(response))
+    try_repeatedly_with_timeout(lambda:  reply_to_comment(comment, response))
     comment.save()
 
 
 def answer_comment_wrong_post_type(comment):
     print("start answering comment from {} in {}".format(comment.author.name, comment.subreddit.display_name))
-    try_repeatedly_with_timeout(lambda: comment.reply(WRONG_POST_TYPE_MESSAGE))
+    try_repeatedly_with_timeout(lambda: reply_to_comment(comment, WRONG_POST_TYPE_MESSAGE))
     comment.save()
+
+
+def reply_to_comment(comment, text):
+    if not comment.banned_by:
+        comment.reply(text)
+    else:
+        print("Comment has been deleted... Can't respond!")
 
 
 def search_tweets(comment):
@@ -134,18 +142,19 @@ def send_pm_with_error_to_creator(error):
 
 
 def try_repeatedly_with_timeout(func):
+    start_time = time.time()
     too_many_tries_exception = True
     while too_many_tries_exception:
         try:
             too_many_tries_exception = False
             func()
         except Exception as e:
-            if not isinstance(e, praw.exceptions.APIException):
+            if not isinstance(e, praw.exceptions.APIException) or time.time() - start_time >= MAX_TIMEOUT:
                 send_pm_with_error_to_creator(traceback.format_exc())
                 print("Error occured")
             else:
                 too_many_tries_exception = True
-                print("Waiting then trying again!: {}".format(str(e)))
+                print("PRAW API Exception!: {}".format(str(e)))
                 time.sleep(ATTEMPT_TIMEOUT)
 
 

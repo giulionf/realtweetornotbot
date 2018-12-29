@@ -45,7 +45,11 @@ class TweetFinder:
         if candidate.content:
             got3_criteria.setQuerySearch(candidate.format_content_to_or_query())
 
-        tweets = got3.manager.TweetManager.getTweets(got3_criteria)
+        try:
+            tweets = got3.manager.TweetManager.getTweets(got3_criteria)
+        except:
+            tweets = []
+
         sorted_tweets = sorted(tweets, reverse=True, key=lambda tweet: TweetFinder.__score_result(tweet, candidate))
 
         if len(sorted_tweets) > 0:

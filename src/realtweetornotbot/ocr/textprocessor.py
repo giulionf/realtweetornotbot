@@ -49,7 +49,7 @@ class TextProcessor:
         candidates = []
 
         if len(found_users) == 0:
-            found_users.append("")
+            return []
 
         if len(found_dates) == 0:
             found_dates.append("")

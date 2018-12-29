@@ -9,7 +9,6 @@ from configparser import ExtendedInterpolation
 from praw import exceptions
 from realtweetornotbot.twitter.tweetfinder import TweetFinder
 from realtweetornotbot.comment.commandutils import CommandUtils
-from realtweetornotbot.result.error import SearchError
 
 config = configparser.ConfigParser()
 config._interpolation = ExtendedInterpolation()
@@ -33,19 +32,12 @@ SOURCE_LINK = config['LINKS']['source']
 SUBREDDIT_LINK = config['LINKS']['subreddit']
 
 # Message
-SUCCESS_MESSAGE_BLUEPRINT = config['MESSAGE']['success']
-NONE_FOUND_MESSAGE = config['MESSAGE']['none_found']
+RESULT_MESSAGE = config['MESSAGE']['success']
 WRONG_POST_TYPE_MESSAGE = config['MESSAGE']['wrong_type']
 SINGLE_TWEET = config['MESSAGE']['single_tweet']
-ERROR_MESSAGE = config['MESSAGE']['error_occured']
-
-# Error
-NO_DATE_ERROR = config['ERROR']['no_date']
-NO_USER_ERROR = config['ERROR']['no_user']
-LOW_MATCH_ERROR = config['ERROR']['low_match']
 
 # Types of images that can be processed
-ALLOWED_IMAGE_TYPES = ["jpg", "png", "jpeg"]
+ALLOWED_IMAGE_TYPES = ["jpg", "png", "jpeg", "webp"]
 
 # Time to wait after a response request was denied until retrying
 ATTEMPT_TIMEOUT = 30
@@ -159,38 +151,34 @@ def try_repeatedly_with_timeout(func):
 
 
 def form_comment_response(results):
+    users = set(map(lambda x: x.searchcandidate.user, results))
+    dates = set(map(lambda x: x.searchcandidate.date, results))
+
+    return RESULT_MESSAGE.format(form_user_string(users), form_date_string(dates), form_tweet_string(results))
+
+
+def form_user_string(users):
+    users = list(filter(None, users))
+    if len(users) == 0:
+        return "-"
+    else:
+        return ", ".join(list(map(lambda x: '`{}`'.format(x), users)))
+
+
+def form_date_string(dates):
+    dates = list(filter(None, dates))
+    if len(dates) == 0:
+        return "-"
+    else:
+        return ", ".join(list(map(lambda x: '`{}`'.format(x.strftime("%Y-%m-%d")), dates)))
+
+
+def form_tweet_string(results):
+    results = list(filter(None, results))
     if len(results) == 0:
-        return NONE_FOUND_MESSAGE.format(form_none_found_message_body(results))
+        return "-"
     else:
-        return SUCCESS_MESSAGE_BLUEPRINT.format(form_success_message_body(results))
-
-
-def form_none_found_message_body(results):
-    if results and any(len(x.errors) > 0 for x in results):
-        return form_error_message(results)
-    else:
-        return ""
-
-
-def form_success_message_body(results):
-    tweets_string = "\n".join(list(map(lambda x: create_single_link_to_tweet(results.index(x), x), results)))
-    if any(len(x.errors) > 0 for x in results):
-        tweets_string = tweets_string + "\n" + form_error_message(results)
-    return tweets_string
-
-
-def form_error_message(results):
-    errors = []
-    if any(SearchError.NO_USER in result.errors for result in results):
-        errors.append(NO_USER_ERROR + "\n")
-
-    if any(SearchError.NO_DATE in result.errors for result in results):
-        errors.append(NO_DATE_ERROR + "\n")
-
-    if any(SearchError.LOW_MATCH in result.errors for result in results):
-        errors.append(LOW_MATCH_ERROR + "\n")
-
-    return ERROR_MESSAGE.format("\n".join(errors))
+        return "\n".join(list(map(lambda x: create_single_link_to_tweet(results.index(x), x), results)))
 
 
 def create_single_link_to_tweet(index, result):

@@ -13,15 +13,19 @@ class ImageProcessor:
     @staticmethod
     def image_to_text(image_url):
         image = ImageProcessor.__get_image(image_url)
-        image = ImageProcessor.__optimize(image)
-        text = pytesseract.image_to_string(image, lang="eng")
-        return text
+        if image:
+            image = ImageProcessor.__optimize(image)
+            text = pytesseract.image_to_string(image, lang="eng")
+            return text
+        else:
+            return ""
 
     @staticmethod
     def __get_image(url):
-        response = requests.get(url)
-        image = Image.open(io.BytesIO(response.content))
-        return image
+        try:
+            return Image.open(io.BytesIO(requests.get(url).content))
+        except:
+            return None
 
     @staticmethod
     def __optimize(image):

@@ -1,11 +1,10 @@
 import io
 import requests
 import pytesseract
-from PIL import Image
+from PIL import Image, ImageEnhance
 
-MIN_WIDTH = 3000
-MIN_HEIGHT = 3000
-PIXEL_BINARY_THRESHOLD = 200
+MIN_WIDTH = 5000
+MIN_HEIGHT = 5000
 
 
 class ImageProcessor:
@@ -31,6 +30,7 @@ class ImageProcessor:
     def __optimize(image):
         image = image.convert('L')
         image = ImageProcessor.__scale_to_working_size(image)
+        image = ImageEnhance.Contrast(image).enhance(2)
         return image
 
     @staticmethod

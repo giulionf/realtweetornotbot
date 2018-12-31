@@ -91,20 +91,19 @@ def on_new_result(comment, results):
     print("Worker Done: Trying to reply to {} in {}".format(comment.author.name, comment.subreddit.display_name))
     response = form_comment_response(results)
     try_repeatedly_with_timeout(lambda:  reply_to_comment(comment, response))
-    comment.save()
 
 
 def answer_comment_wrong_post_type(comment):
-    print("start answering comment from {} in {}".format(comment.author.name, comment.subreddit.display_name))
+    print("No Image Found: Start answering comment from {} in {}".format(comment.author.name, comment.subreddit.display_name))
     try_repeatedly_with_timeout(lambda: reply_to_comment(comment, WRONG_POST_TYPE_MESSAGE))
-    comment.save()
 
 
 def reply_to_comment(comment, text):
-    if not comment.banned_by:
+    if should_summon(comment):
         comment.reply(text)
+        comment.save()
     else:
-        print("Comment has been deleted... Can't respond!")
+        print("Comment has been deleted or was changed... Shouldn't summon anymore!")
 
 
 def search_tweets(comment):

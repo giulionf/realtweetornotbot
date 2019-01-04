@@ -176,7 +176,7 @@ def form_date_string(dates):
 
 
 def form_tweet_string(results):
-    results = list(filter(None, results))
+    results = list(filter(lambda result: result.tweet is not None, results))
     if len(results) == 0:
         return "-"
     else:

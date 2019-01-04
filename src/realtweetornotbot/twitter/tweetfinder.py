@@ -47,7 +47,8 @@ class TweetFinder:
 
         try:
             tweets = got3.manager.TweetManager.getTweets(got3_criteria)
-        except:
+        except Exception as e:
+            print("Could not get tweets: " + str(e))
             tweets = []
 
         sorted_tweets = sorted(tweets, reverse=True, key=lambda tweet: TweetFinder.__score_result(tweet, candidate))
@@ -56,7 +57,7 @@ class TweetFinder:
             tweet = sorted_tweets[0]
             return SearchResult(candidate, tweet, TweetFinder.__score_result(tweet, candidate))
         else:
-            return []
+            return SearchResult(candidate, None, 0)
 
     @staticmethod
     def __score_result(tweet, candidate):

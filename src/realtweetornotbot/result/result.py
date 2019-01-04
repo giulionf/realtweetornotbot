@@ -19,6 +19,3 @@ class SearchResult:
 
         if len(self.errors) == 0 and self.score < LOW_MATCH_PERCENT:
             self.errors.append(SearchError.LOW_MATCH)
-
-        if not tweet:
-            self.errors.append(SearchError.NO_RESULTS)

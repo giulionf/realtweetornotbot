@@ -46,6 +46,9 @@ MAX_TIMEOUT = 11 * 60
 # Timeout after last comment streamed for remote hosting
 NO_NEW_COMMENT_TIMEOUT = 10 * 60  # in seconds
 
+# Number of concurrent threads
+THREAD_POOL_COUNT = 5
+
 # Praw Client
 praw_client = praw.Reddit(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, user_agent=USER_AGENT, username=USERNAME,
                           password=PASSWORD)
@@ -189,5 +192,5 @@ def is_run_locally():
 
 
 if __name__ == "__main__":
-    workers = concurrent.futures.ThreadPoolExecutor()
+    workers = concurrent.futures.ThreadPoolExecutor(THREAD_POOL_COUNT)
     main()

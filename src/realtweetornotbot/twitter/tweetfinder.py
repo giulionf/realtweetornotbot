@@ -5,7 +5,7 @@ from realtweetornotbot.ocr.imageprocessor import ImageProcessor
 from realtweetornotbot.ocr.textprocessor import TextProcessor
 from realtweetornotbot.result.result import SearchResult
 
-TWEET_MAX_AMOUNT = 100000
+TWEET_MAX_AMOUNT = 10000
 MAX_RETRIES = 5
 
 

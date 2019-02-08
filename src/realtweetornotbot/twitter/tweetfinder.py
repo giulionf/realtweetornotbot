@@ -12,15 +12,15 @@ MAX_RETRIES = 5
 class TweetFinder:
 
     @staticmethod
-    def find_tweet_results(comment, parameters):
-        candidates = TweetFinder.__get_candidates(comment.submission.url, parameters)
+    def find_tweet_results(comment):
+        candidates = TweetFinder.__get_candidates(comment.submission.url)
         results = TweetFinder.__get_results(candidates)
         return results
 
     @staticmethod
-    def __get_candidates(url, parameters):
+    def __get_candidates(url):
         text = ImageProcessor.image_to_text(url)
-        candidates = TextProcessor.find_candidates(text, parameters)
+        candidates = TextProcessor.find_candidates(text)
         return candidates
 
     @staticmethod

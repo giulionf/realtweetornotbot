@@ -8,7 +8,6 @@ import concurrent.futures
 from configparser import ExtendedInterpolation
 from praw import exceptions
 from realtweetornotbot.twitter.tweetfinder import TweetFinder
-from realtweetornotbot.comment.commandutils import CommandUtils
 
 config = configparser.ConfigParser()
 config._interpolation = ExtendedInterpolation()
@@ -110,8 +109,7 @@ def reply_to_comment(comment, text):
 
 
 def search_tweets(comment):
-    parameters = CommandUtils.get_comment_parameters(comment.body)
-    results = TweetFinder.find_tweet_results(comment, parameters)
+    results = TweetFinder.find_tweet_results(comment)
     return results
 
 

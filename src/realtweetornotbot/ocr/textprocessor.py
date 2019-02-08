@@ -12,9 +12,9 @@ content_regex = r"[^a-zA-Z0-9]"
 class TextProcessor:
 
     @staticmethod
-    def find_candidates(text, parameters):
-        found_users = TextProcessor.__find_users(text) if not parameters.user else [parameters.user]
-        found_dates = TextProcessor.__find_dates(text) if not parameters.date else [parameters.date]
+    def find_candidates(text):
+        found_users = TextProcessor.__find_users(text)
+        found_dates = TextProcessor.__find_dates(text)
         found_hashtags = TextProcessor.__find_hashtags(text)
         content = TextProcessor.__find_content(text)
         candidates = TextProcessor.__create_candidates(found_users, found_dates, found_hashtags, content)

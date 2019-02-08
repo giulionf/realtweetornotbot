@@ -60,6 +60,22 @@ def main():
         bot_loop_remote()
 
 
+def debug(url):
+    if is_image_submission(url):
+        future_result = workers.submit(search_tweets, url)
+        concurrent.futures.Future.add_done_callback(future_result, lambda x: debug_results(x.result()))
+    elif is_imgur_submission(url):
+        future_result = workers.submit(search_tweets, url + ".jpg")
+        concurrent.futures.Future.add_done_callback(future_result, lambda x: debug_results(x.result()))
+    else:
+        print(WRONG_POST_TYPE_MESSAGE)
+
+
+def debug_results(results):
+    response = form_comment_response(results)
+    print(response)
+
+
 def bot_loop_local():
     print("STARTING BOT LOCALLY")
     for comment in praw_client.subreddit(SUBREDDITS).stream.comments():
@@ -81,23 +97,25 @@ def on_summon(comment):
 
 
 def on_new_comment(comment):
-    if not is_image_submission(comment.submission.url):
-        answer_comment_wrong_post_type(comment)
+    url = comment.submission.url
+    if is_image_submission(url):
+        dispatch_search_worker(comment, url)
+    elif is_imgur_submission(url):
+        dispatch_search_worker(comment, url + ".jpg")
     else:
-        print("Worker is dispatched")
-        future_result = workers.submit(search_tweets, comment)
-        concurrent.futures.Future.add_done_callback(future_result, lambda x: on_new_result(comment, x.result()))
+        print(WRONG_POST_TYPE_MESSAGE)
+
+
+def dispatch_search_worker(comment, image_url):
+    print("Worker is dispatched")
+    future_result = workers.submit(search_tweets, image_url)
+    concurrent.futures.Future.add_done_callback(future_result, lambda x: on_new_result(comment, x.result()))
 
 
 def on_new_result(comment, results):
     print("Worker Done: Trying to reply to {} in {}".format(comment.author.name, comment.subreddit.display_name))
     response = form_comment_response(results)
     try_repeatedly_with_timeout(lambda:  reply_to_comment(comment, response))
-
-
-def answer_comment_wrong_post_type(comment):
-    print("No Image Found: Start answering comment from {} in {}".format(comment.author.name, comment.subreddit.display_name))
-    try_repeatedly_with_timeout(lambda: reply_to_comment(comment, WRONG_POST_TYPE_MESSAGE))
 
 
 def reply_to_comment(comment, text):
@@ -108,8 +126,8 @@ def reply_to_comment(comment, text):
         print("Comment has been deleted or was changed... Shouldn't summon anymore!")
 
 
-def search_tweets(comment):
-    results = TweetFinder.find_tweet_results(comment)
+def search_tweets(image_url):
+    results = TweetFinder.find_tweet_results(image_url)
     return results
 
 
@@ -119,6 +137,10 @@ def should_summon(comment):
 
 def is_image_submission(url):
     return any(data_type in url for data_type in ALLOWED_IMAGE_TYPES)
+
+
+def is_imgur_submission(url):
+    return "imgur.com" in url
 
 
 def is_comment_from_bot(comment):

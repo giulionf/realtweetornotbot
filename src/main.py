@@ -173,26 +173,7 @@ def try_repeatedly_with_timeout(func):
 
 
 def form_comment_response(results):
-    users = set(map(lambda x: x.searchcandidate.user, results))
-    dates = set(map(lambda x: x.searchcandidate.date, results))
-
-    return RESULT_MESSAGE.format(form_user_string(users), form_date_string(dates), form_tweet_string(results))
-
-
-def form_user_string(users):
-    users = list(filter(None, users))
-    if len(users) == 0:
-        return "-"
-    else:
-        return ", ".join(list(map(lambda x: '`{}`'.format(x), users)))
-
-
-def form_date_string(dates):
-    dates = list(filter(None, dates))
-    if len(dates) == 0:
-        return "-"
-    else:
-        return ", ".join(list(map(lambda x: '`{}`'.format(x.strftime("%Y-%m-%d")), dates)))
+    return RESULT_MESSAGE.format(form_tweet_string(results))
 
 
 def form_tweet_string(results):

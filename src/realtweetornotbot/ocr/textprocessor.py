@@ -4,7 +4,8 @@ from realtweetornotbot.twitter.searchcandidate import SearchCandidate
 
 username_regex = r"@[A-Za-z0-9_]{4,15}"
 date_regex = r"\d{1,2}\s?[A-Za-z]{3}\s?\d{4}"
-old_date_regex = r"\d{1,2}\/\d{1,2}\/\d{1,2}"
+date_regex2 = r"\d{1,2}\s?[A-Za-z]{3}\s?\d{2}"
+date_regex3 = r"\d{1,2}\/\d{1,2}\/\d{1,2}"
 hashtag_regex = r"#[A-Za-z0-9]*"
 content_regex = r"[^a-zA-Z0-9]"
 
@@ -26,9 +27,10 @@ class TextProcessor:
 
     @staticmethod
     def __find_dates(text):
-        new_dates = re.findall(date_regex, text)
-        old_dates = re.findall(old_date_regex, text)
-        return TextProcessor.__create_datetime_objects(new_dates, old_dates)
+        date_format1 = re.findall(date_regex, text)
+        date_format2 = re.findall(date_regex2, text)
+        date_format3 = re.findall(date_regex3, text)
+        return TextProcessor.__create_datetime_objects(date_format1, date_format2, date_format3)
 
     @staticmethod
     def __find_hashtags(text):
@@ -61,9 +63,10 @@ class TextProcessor:
         return candidates
 
     @staticmethod
-    def __create_datetime_objects(found_dates, found_old_dates):
-        dates = list(map(lambda d: TextProcessor.__format_date(d, "%d %b %Y"), found_dates))
-        dates.extend(map(lambda d: TextProcessor.__format_date(d, "%m/%d/%y"), found_old_dates))
+    def __create_datetime_objects(date_format1, date_format2, date_format3):
+        dates = list(map(lambda d: TextProcessor.__format_date(d, "%d %b %Y"), date_format1))
+        dates = list(map(lambda d: TextProcessor.__format_date(d, "%d %b %y"), date_format2))
+        dates.extend(map(lambda d: TextProcessor.__format_date(d, "%m/%d/%y"), date_format3))
         return dates
 
     @staticmethod

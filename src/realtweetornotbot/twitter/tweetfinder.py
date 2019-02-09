@@ -7,6 +7,7 @@ from realtweetornotbot.result.result import SearchResult
 
 TWEET_MAX_AMOUNT = 50000
 MAX_RETRIES = 5
+MIN_SCORE = 65
 
 
 class TweetFinder:
@@ -55,9 +56,11 @@ class TweetFinder:
 
         if len(sorted_tweets) > 0:
             tweet = sorted_tweets[0]
-            return SearchResult(candidate, tweet, TweetFinder.__score_result(tweet, candidate))
-        else:
-            return SearchResult(candidate, None, 0)
+            score = TweetFinder.__score_result(tweet, candidate)
+            if score >= MIN_SCORE:
+                return SearchResult(candidate, tweet, score)
+
+        return SearchResult(candidate, None, 0)
 
     @staticmethod
     def __score_result(tweet, candidate):

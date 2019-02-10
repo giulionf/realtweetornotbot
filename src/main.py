@@ -121,7 +121,7 @@ def on_new_result(comment, results):
 def reply_to_comment(comment, text):
     if should_summon(comment):
         comment.reply(text)
-        comment.save()
+        comment.submission.save()
     else:
         print("Comment has been deleted or was changed... Shouldn't summon anymore!")
 
@@ -132,7 +132,8 @@ def search_tweets(image_url):
 
 
 def should_summon(comment):
-    return KEYWORD in comment.body and not is_comment_from_bot(comment) and not comment.saved
+    return KEYWORD in comment.body and not is_comment_from_bot(comment) \
+           and not (comment.saved or comment.submission.saved)
 
 
 def is_image_submission(url):

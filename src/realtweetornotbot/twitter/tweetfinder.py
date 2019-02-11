@@ -32,7 +32,21 @@ class TweetFinder:
             results = list(map(TweetFinder.__search_tweet_for_candidate, candidates))
             results = list(filter(None, results))
             tries += 1
-        return results
+        unique_results = TweetFinder.__filter_duplicates(results)
+        return unique_results
+
+    @staticmethod
+    def __filter_duplicates(results):
+        unique_results = []
+        for result in results:
+            already_added = False
+            for r in unique_results:
+                if r.tweet.id == result.tweet.id:
+                    already_added = True
+                    break
+            if not already_added:
+                unique_results.append(result)
+        return unique_results
 
     @staticmethod
     def __search_tweet_for_candidate(candidate):
@@ -60,7 +74,7 @@ class TweetFinder:
             if score >= MIN_SCORE:
                 return SearchResult(candidate, tweet, score)
 
-        return SearchResult(candidate, None, 0)
+        return None
 
     @staticmethod
     def __score_result(tweet, candidate):

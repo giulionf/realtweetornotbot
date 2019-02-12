@@ -48,12 +48,11 @@ RUN_TIMEOUT = 30 * 60  # half hour between each run
 POST_FETCH_COUNT = 100  # Total number of fetched posts! Not per subreddit
 
 # Number of concurrent threads
-THREAD_POOL_COUNT = 4
+THREAD_POOL_COUNT = 3
 
 # Praw Client
 praw_client = praw.Reddit(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, user_agent=USER_AGENT, username=USERNAME,
                           password=PASSWORD)
-active_workers = 0
 
 
 def main():
@@ -80,38 +79,29 @@ def debug_results(results):
 
 
 def on_bot_scheduled():
-    with concurrent.futures.ThreadPoolExecutor(max_workers=THREAD_POOL_COUNT) as workers:
-        print("STARTING PLANNED SCHEDULE")
-        global active_workers
-        for submission in praw_client.subreddit(SUBREDDITS).hot(limit=POST_FETCH_COUNT):
-            while active_workers >= THREAD_POOL_COUNT:
-                time.sleep(1)
+    image_submissions = []
+    for submission in praw_client.subreddit(SUBREDDITS).hot(limit=POST_FETCH_COUNT):
+        if should_summon(submission):
+            image_submissions.append(submission)
 
-            if should_summon(submission):
-                on_new_submission(workers, submission)
+    print("Checking {} submissions".format(len(image_submissions)))
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=THREAD_POOL_COUNT) as workers:
+        workers.map(on_new_submission, image_submissions)
     print("Job Done - Sleeping")
 
 
-def on_new_submission(workers, submission):
+def on_new_submission(submission):
     if is_image_submission(submission.url):
         print("Image Submission From: {} in {}".format(submission.author.name, submission.subreddit.display_name))
-        dispatch_search_worker(workers, submission)
+        on_new_result(submission, search_tweets(submission.url))
     elif is_imgur_submission(submission.url):
         print("IMGUR Submission From: {} in {}".format(submission.author.name, submission.subreddit.display_name))
-        dispatch_search_worker(workers, submission, ".jpg")
+        on_new_result(submission, search_tweets(submission.url + ".jpg"))
 
 
 def on_submission_done(submission):
     submission.save()
-    global active_workers
-    active_workers -= 1
-
-
-def dispatch_search_worker(workers, submission, append_to_url=""):
-    global active_workers
-    active_workers += 1
-    future_result = workers.submit(search_tweets, submission.url + append_to_url)
-    concurrent.futures.Future.add_done_callback(future_result, lambda x: on_new_result(submission, x.result()))
 
 
 def on_new_result(submission, results):
@@ -130,7 +120,7 @@ def reply_to_submission(submission, text):
 
 
 def search_tweets(image_url):
-    print("Worker is dispatched")
+    print("Searching Tweet in Worker: {}".format(image_url))
     results = TweetFinder.find_tweet_results(image_url)
     return results
 

@@ -43,7 +43,9 @@ ATTEMPT_TIMEOUT = 30
 MAX_TIMEOUT = 11 * 60
 
 # Timeout after last submission streamed for remote hosting
-NO_NEW_POST_TIMEOUT = 10 * 60  # in seconds
+RUN_TIMEOUT = 30 * 60  # half hour between each run
+
+POST_FETCH_COUNT = 100  # Total number of fetched posts! Not per subreddit
 
 # Number of concurrent threads
 THREAD_POOL_COUNT = 4
@@ -53,22 +55,23 @@ praw_client = praw.Reddit(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, user
                           password=PASSWORD)
 active_workers = 0
 
+
 def main():
-    if is_run_locally():
-        bot_loop_local()
-    else:
-        bot_loop_remote()
+    while 1:
+        on_bot_scheduled()
+        time.sleep(RUN_TIMEOUT)
 
 
 def debug(url):
-    if is_image_submission(url):
-        future_result = workers.submit(search_tweets, url)
-        concurrent.futures.Future.add_done_callback(future_result, lambda x: debug_results(x.result()))
-    elif is_imgur_submission(url):
-        future_result = workers.submit(search_tweets, url + ".jpg")
-        concurrent.futures.Future.add_done_callback(future_result, lambda x: debug_results(x.result()))
-    else:
-        print(WRONG_POST_TYPE_MESSAGE)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=THREAD_POOL_COUNT) as workers:
+        if is_image_submission(url):
+            future_result = workers.submit(search_tweets, url)
+            concurrent.futures.Future.add_done_callback(future_result, lambda x: debug_results(x.result()))
+        elif is_imgur_submission(url):
+            future_result = workers.submit(search_tweets, url + ".jpg")
+            concurrent.futures.Future.add_done_callback(future_result, lambda x: debug_results(x.result()))
+        else:
+            print(WRONG_POST_TYPE_MESSAGE)
 
 
 def debug_results(results):
@@ -76,40 +79,26 @@ def debug_results(results):
     print(response)
 
 
-def bot_loop_local():
-    print("STARTING BOT LOCALLY")
-    global active_workers
-    for submission in praw_client.subreddit(SUBREDDITS).stream.submissions():
-        while active_workers >= THREAD_POOL_COUNT:
-            time.sleep(1)
+def on_bot_scheduled():
+    with concurrent.futures.ThreadPoolExecutor(max_workers=THREAD_POOL_COUNT) as workers:
+        print("STARTING PLANNED SCHEDULE")
+        global active_workers
+        for submission in praw_client.subreddit(SUBREDDITS).hot(limit=POST_FETCH_COUNT):
+            while active_workers >= THREAD_POOL_COUNT:
+                time.sleep(1)
 
-        if should_summon(submission):
-            on_summon(submission)
-
-
-def bot_loop_remote():
-    print("STARTING BOT ON REMOTE SERVER")
-    global active_workers
-    for submission in praw_client.subreddit(SUBREDDITS).stream.submissions():
-        while active_workers >= THREAD_POOL_COUNT:
-            time.sleep(1)
-
-        if should_summon(submission):
-            on_summon(submission)
+            if should_summon(submission):
+                on_new_submission(workers, submission)
+    print("Job Done - Sleeping")
 
 
-def on_summon(submission):
-    if submission.url is not None:
-        on_new_submission(submission)
-
-
-def on_new_submission(submission):
+def on_new_submission(workers, submission):
     if is_image_submission(submission.url):
-        print("New Image Submission From: {} in {}".format(submission.author.name, submission.subreddit.display_name))
-        dispatch_search_worker(submission)
+        print("Image Submission From: {} in {}".format(submission.author.name, submission.subreddit.display_name))
+        dispatch_search_worker(workers, submission)
     elif is_imgur_submission(submission.url):
-        print("New IMGUR Submission From: {} in {}".format(submission.author.name, submission.subreddit.display_name))
-        dispatch_search_worker(submission, ".jpg")
+        print("IMGUR Submission From: {} in {}".format(submission.author.name, submission.subreddit.display_name))
+        dispatch_search_worker(workers, submission, ".jpg")
 
 
 def on_submission_done(submission):
@@ -118,7 +107,7 @@ def on_submission_done(submission):
     active_workers -= 1
 
 
-def dispatch_search_worker(submission, append_to_url=""):
+def dispatch_search_worker(workers, submission, append_to_url=""):
     global active_workers
     active_workers += 1
     future_result = workers.submit(search_tweets, submission.url + append_to_url)
@@ -147,7 +136,7 @@ def search_tweets(image_url):
 
 
 def should_summon(submission):
-    return not submission.saved
+    return not submission.saved and submission.url is not None
 
 
 def is_image_submission(url):
@@ -200,5 +189,4 @@ def is_run_locally():
 
 
 if __name__ == "__main__":
-    workers = concurrent.futures.ThreadPoolExecutor(max_workers=THREAD_POOL_COUNT)
     main()

@@ -46,7 +46,7 @@ MAX_TIMEOUT = 11 * 60
 NO_NEW_POST_TIMEOUT = 10 * 60  # in seconds
 
 # Number of concurrent threads
-THREAD_POOL_COUNT = 5
+THREAD_POOL_COUNT = 3
 
 # Praw Client
 praw_client = praw.Reddit(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, user_agent=USER_AGENT, username=USERNAME,
@@ -109,7 +109,6 @@ def on_submission_done(submission):
 
 
 def dispatch_search_worker(submission, append_to_url=""):
-    print("Worker is dispatched")
     future_result = workers.submit(search_tweets, submission.url + append_to_url)
     concurrent.futures.Future.add_done_callback(future_result, lambda x: on_new_result(submission, x.result()))
 
@@ -130,6 +129,7 @@ def reply_to_submission(submission, text):
 
 
 def search_tweets(image_url):
+    print("Worker is dispatched")
     results = TweetFinder.find_tweet_results(image_url)
     return results
 
@@ -188,5 +188,5 @@ def is_run_locally():
 
 
 if __name__ == "__main__":
-    workers = concurrent.futures.ThreadPoolExecutor(THREAD_POOL_COUNT)
+    workers = concurrent.futures.ThreadPoolExecutor(max_workers=THREAD_POOL_COUNT)
     main()

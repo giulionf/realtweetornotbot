@@ -15,6 +15,7 @@ class ImageProcessor:
         if image:
             image = ImageProcessor.__optimize(image)
             text = pytesseract.image_to_string(image, lang="eng")
+            del image
             return text
         else:
             return ""

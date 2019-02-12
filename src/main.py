@@ -46,12 +46,12 @@ MAX_TIMEOUT = 11 * 60
 NO_NEW_POST_TIMEOUT = 10 * 60  # in seconds
 
 # Number of concurrent threads
-THREAD_POOL_COUNT = 3
+THREAD_POOL_COUNT = 4
 
 # Praw Client
 praw_client = praw.Reddit(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, user_agent=USER_AGENT, username=USERNAME,
                           password=PASSWORD)
-
+active_workers = 0
 
 def main():
     if is_run_locally():
@@ -78,14 +78,22 @@ def debug_results(results):
 
 def bot_loop_local():
     print("STARTING BOT LOCALLY")
+    global active_workers
     for submission in praw_client.subreddit(SUBREDDITS).stream.submissions():
+        while active_workers >= THREAD_POOL_COUNT:
+            time.sleep(1)
+
         if should_summon(submission):
             on_summon(submission)
 
 
 def bot_loop_remote():
     print("STARTING BOT ON REMOTE SERVER")
+    global active_workers
     for submission in praw_client.subreddit(SUBREDDITS).stream.submissions():
+        while active_workers >= THREAD_POOL_COUNT:
+            time.sleep(1)
+
         if should_summon(submission):
             on_summon(submission)
 
@@ -106,9 +114,13 @@ def on_new_submission(submission):
 
 def on_submission_done(submission):
     submission.save()
+    global active_workers
+    active_workers -= 1
 
 
 def dispatch_search_worker(submission, append_to_url=""):
+    global active_workers
+    active_workers += 1
     future_result = workers.submit(search_tweets, submission.url + append_to_url)
     concurrent.futures.Future.add_done_callback(future_result, lambda x: on_new_result(submission, x.result()))
 

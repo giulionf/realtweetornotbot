@@ -42,8 +42,8 @@ ALLOWED_IMAGE_TYPES = ["jpg", "png", "jpeg", "webp"]
 ATTEMPT_TIMEOUT = 30
 MAX_TIMEOUT = 11 * 60
 
-# Timeout after last comment streamed for remote hosting
-NO_NEW_COMMENT_TIMEOUT = 10 * 60  # in seconds
+# Timeout after last submission streamed for remote hosting
+NO_NEW_POST_TIMEOUT = 10 * 60  # in seconds
 
 # Number of concurrent threads
 THREAD_POOL_COUNT = 5
@@ -78,52 +78,55 @@ def debug_results(results):
 
 def bot_loop_local():
     print("STARTING BOT LOCALLY")
-    for comment in praw_client.subreddit(SUBREDDITS).stream.comments():
-        if should_summon(comment):
-            on_summon(comment)
+    for submission in praw_client.subreddit(SUBREDDITS).stream.submissions():
+        if should_summon(submission):
+            on_summon(submission)
 
 
 def bot_loop_remote():
     print("STARTING BOT ON REMOTE SERVER")
-    for comment in praw_client.subreddit(SUBREDDITS).stream.comments():
-        if should_summon(comment):
-            on_summon(comment)
+    for submission in praw_client.subreddit(SUBREDDITS).stream.submissions():
+        if should_summon(submission):
+            on_summon(submission)
 
 
-def on_summon(comment):
-    print("New Comment From: {} in {}".format(comment.author.name, comment.subreddit.display_name))
-    if comment.submission.url is not None:
-        on_new_comment(comment)
+def on_summon(submission):
+    if submission.url is not None:
+        on_new_submission(submission)
 
 
-def on_new_comment(comment):
-    url = comment.submission.url
-    if is_image_submission(url):
-        dispatch_search_worker(comment, url)
-    elif is_imgur_submission(url):
-        dispatch_search_worker(comment, url + ".jpg")
-    else:
-        print(WRONG_POST_TYPE_MESSAGE)
+def on_new_submission(submission):
+    if is_image_submission(submission.url):
+        print("New Image Submission From: {} in {}".format(submission.author.name, submission.subreddit.display_name))
+        dispatch_search_worker(submission)
+    elif is_imgur_submission(submission.url):
+        print("New IMGUR Submission From: {} in {}".format(submission.author.name, submission.subreddit.display_name))
+        dispatch_search_worker(submission, ".jpg")
 
 
-def dispatch_search_worker(comment, image_url):
+def on_submission_done(submission):
+    submission.save()
+
+
+def dispatch_search_worker(submission, append_to_url=""):
     print("Worker is dispatched")
-    future_result = workers.submit(search_tweets, image_url)
-    concurrent.futures.Future.add_done_callback(future_result, lambda x: on_new_result(comment, x.result()))
+    future_result = workers.submit(search_tweets, submission.url + append_to_url)
+    concurrent.futures.Future.add_done_callback(future_result, lambda x: on_new_result(submission, x.result()))
 
 
-def on_new_result(comment, results):
-    print("Worker Done: Trying to reply to {} in {}".format(comment.author.name, comment.subreddit.display_name))
-    response = form_comment_response(results)
-    try_repeatedly_with_timeout(lambda:  reply_to_comment(comment, response))
-
-
-def reply_to_comment(comment, text):
-    if should_summon(comment):
-        comment.reply(text)
-        comment.submission.save()
+def on_new_result(submission, results):
+    if len(results) > 0:
+        print("Worker Done: Replying to {} in {}".format(submission.author.name, submission.subreddit.display_name))
+        response = form_comment_response(results)
+        try_repeatedly_with_timeout(lambda:  reply_to_submission(submission, response))
     else:
-        print("Comment has been deleted or was changed... Shouldn't summon anymore!")
+        print("No results for submission by {} in {}".format(submission.author.name, submission.subreddit.display_name))
+    on_submission_done(submission)
+
+
+def reply_to_submission(submission, text):
+    if should_summon(submission):
+        submission.reply(text)
 
 
 def search_tweets(image_url):
@@ -131,9 +134,8 @@ def search_tweets(image_url):
     return results
 
 
-def should_summon(comment):
-    return KEYWORD in comment.body and not is_comment_from_bot(comment) \
-           and not (comment.saved or comment.submission.saved)
+def should_summon(submission):
+    return not submission.saved
 
 
 def is_image_submission(url):
@@ -142,10 +144,6 @@ def is_image_submission(url):
 
 def is_imgur_submission(url):
     return "imgur.com" in url
-
-
-def is_comment_from_bot(comment):
-    return str.lower(comment.author.name) == USERNAME
 
 
 def send_pm_with_error_to_creator(error):
@@ -178,11 +176,7 @@ def form_comment_response(results):
 
 
 def form_tweet_string(results):
-    results = list(filter(lambda result: result.tweet is not None, results))
-    if len(results) == 0:
-        return "-"
-    else:
-        return "\n".join(list(map(lambda x: create_single_link_to_tweet(results.index(x), x), results)))
+    return "\n".join(list(map(lambda x: create_single_link_to_tweet(results.index(x), x), results)))
 
 
 def create_single_link_to_tweet(index, result):

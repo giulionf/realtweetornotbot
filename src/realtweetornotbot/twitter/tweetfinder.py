@@ -1,5 +1,4 @@
 import GetOldTweets3 as got3
-from datetime import datetime
 from fuzzywuzzy import fuzz
 from realtweetornotbot.ocr.imageprocessor import ImageProcessor
 from realtweetornotbot.ocr.textprocessor import TextProcessor
@@ -31,6 +30,7 @@ class TweetFinder:
         while tries < MAX_RETRIES and len(results) == 0:
             results = list(map(TweetFinder.__search_tweet_for_candidate, candidates))
             results = list(filter(None, results))
+            results = list(filter(lambda result: result.tweet is not None, results))
             tries += 1
         unique_results = TweetFinder.__filter_duplicates(results)
         return unique_results
@@ -80,10 +80,3 @@ class TweetFinder:
     def __score_result(tweet, candidate):
         score = fuzz.token_sort_ratio(tweet.text, candidate.content)
         return score
-
-    @staticmethod
-    def __format_date(date_string):
-        try:
-            return datetime.strptime(date_string, "%Y-%m-%d")
-        finally:
-            return ""

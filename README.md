@@ -10,17 +10,6 @@ RealTweetOrNotBot is a python script that analyzes a twitter screenshot to find 
   - [Pytesseract] - Python Tesseract Wrapper (OCR image analysis)
   - [GetOldTweets3] - Python module to search for tweets
 
-# How to Use
-Under any image submission on reddit, write a comment with the following text in it:
-```sh
-!FindTweetBot
-```
-
-You can also use two parameters, in case the OCR did not correctly detect the date or username:
-```sh
-!FindTweetBot username=exampleusername date=YYYY-MM-DD
-```
-
 # Running the Bot
 The bot needs [Python3] and the Libraries to run. Since this is opensource, the PRAW Secret Data as well as the login information is stored in Environment Variables which need to be set on your Operating System.
 

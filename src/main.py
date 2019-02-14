@@ -1,5 +1,4 @@
 import os
-import sys
 import praw
 import time
 import traceback
@@ -7,7 +6,7 @@ import configparser
 import concurrent.futures
 from configparser import ExtendedInterpolation
 from praw import exceptions
-from realtweetornotbot.twitter.tweetfinder import TweetFinder
+from realtweetornotbot.search.tweetfinder import TweetFinder
 
 config = configparser.ConfigParser()
 config._interpolation = ExtendedInterpolation()
@@ -19,11 +18,11 @@ PASSWORD = os.environ['REDDIT_PASSWORD']
 CLIENT_ID = os.environ['REDDIT_CLIENT_ID']
 CLIENT_SECRET = os.environ['REDDIT_CLIENT_SECRET']
 USER_AGENT = os.environ['REDDIT_USER_AGENT']
+SUBREDDITS = os.environ['REDDIT_SUBREDDITS']
 
 # Bot Data
 CREATOR_NAME = config['BOTDATA']['creator']
 KEYWORD = config['BOTDATA']['keyword']
-SUBREDDITS = config['BOTDATA']['SUBREDDITS']
 
 # Links
 DONATE_LINK = config['LINKS']['donate']
@@ -47,9 +46,6 @@ RUN_TIMEOUT = 30 * 60  # half hour between each run
 
 POST_FETCH_COUNT = 100  # Total number of fetched posts! Not per subreddit
 
-# Number of concurrent threads
-THREAD_POOL_COUNT = 3
-
 # Praw Client
 praw_client = praw.Reddit(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, user_agent=USER_AGENT, username=USERNAME,
                           password=PASSWORD)
@@ -57,75 +53,61 @@ praw_client = praw.Reddit(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, user
 
 def main():
     while 1:
-        on_bot_scheduled()
-        time.sleep(RUN_TIMEOUT)
+        submissions = fetch_new_submissions()
+        work_off_submissions(submissions)
+        pause()
 
 
-def debug(url):
-    with concurrent.futures.ThreadPoolExecutor(max_workers=THREAD_POOL_COUNT) as workers:
-        if is_image_submission(url):
-            future_result = workers.submit(search_tweets, url)
-            concurrent.futures.Future.add_done_callback(future_result, lambda x: debug_results(x.result()))
-        elif is_imgur_submission(url):
-            future_result = workers.submit(search_tweets, url + ".jpg")
-            concurrent.futures.Future.add_done_callback(future_result, lambda x: debug_results(x.result()))
-        else:
-            print(WRONG_POST_TYPE_MESSAGE)
-
-
-def debug_results(results):
-    response = form_comment_response(results)
-    print(response)
-
-
-def on_bot_scheduled():
+def fetch_new_submissions():
     image_submissions = []
     for submission in praw_client.subreddit(SUBREDDITS).hot(limit=POST_FETCH_COUNT):
-        if should_summon(submission):
+        if is_valid_submission(submission):
             image_submissions.append(submission)
+    print("Fetched {} new submissions".format(len(image_submissions)))
+    return image_submissions
 
-    print("Checking {} submissions".format(len(image_submissions)))
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=THREAD_POOL_COUNT) as workers:
-        workers.map(on_new_submission, image_submissions)
+def work_off_submissions(submissions):
+    for submission in submissions:
+        tweets = get_tweets(submission)
+        on_tweets_found(submission, tweets)
+
+
+def pause():
     print("Job Done - Sleeping")
+    time.sleep(RUN_TIMEOUT)
 
 
-def on_new_submission(submission):
+def get_tweets(submission):
+    print("Image Submission From: {} in {}".format(submission.author.name, submission.subreddit.display_name))
     if is_image_submission(submission.url):
-        print("Image Submission From: {} in {}".format(submission.author.name, submission.subreddit.display_name))
-        on_new_result(submission, search_tweets(submission.url))
+        return search_tweets(submission.url)
     elif is_imgur_submission(submission.url):
-        print("IMGUR Submission From: {} in {}".format(submission.author.name, submission.subreddit.display_name))
-        on_new_result(submission, search_tweets(submission.url + ".jpg"))
-
-
-def on_submission_done(submission):
-    submission.save()
-
-
-def on_new_result(submission, results):
-    if len(results) > 0:
-        print("Worker Done: Replying to {} in {}".format(submission.author.name, submission.subreddit.display_name))
-        response = form_comment_response(results)
-        try_repeatedly_with_timeout(lambda:  reply_to_submission(submission, response))
-    else:
-        print("No results for submission by {} in {}".format(submission.author.name, submission.subreddit.display_name))
-    on_submission_done(submission)
-
-
-def reply_to_submission(submission, text):
-    if should_summon(submission):
-        submission.reply(text)
+        return search_tweets(submission.url + ".jpg")
 
 
 def search_tweets(image_url):
-    print("Searching Tweet in Worker: {}".format(image_url))
-    results = TweetFinder.find_tweet_results(image_url)
+    print("Searching for tweets in: {}".format(image_url))
+    results = TweetFinder.find_tweets(image_url)
     return results
 
 
-def should_summon(submission):
+def on_tweets_found(submission, tweets):
+    if tweets and len(tweets) > 0:
+        print("{} tweets found - Replying to {} in {}".format(len(tweets), submission.author.name, submission.subreddit.display_name))
+        response = form_comment_response(tweets)
+        try_repeatedly_with_timeout(lambda:  reply_to_submission(submission, response))
+    else:
+        print("No results for submission by {} in {}".format(submission.author.name, submission.subreddit.display_name))
+    submission.save()
+
+
+def reply_to_submission(submission, text):
+    if is_valid_submission(submission):
+        submission.reply(text)
+
+
+def is_valid_submission(submission):
     return not submission.saved and submission.url is not None
 
 
@@ -172,10 +154,6 @@ def form_tweet_string(results):
 
 def create_single_link_to_tweet(index, result):
     return SINGLE_TWEET.format(index + 1, result.tweet.username, result.score, result.tweet.permalink) + "\n"
-
-
-def is_run_locally():
-    return len(sys.argv) > 1 and sys.argv[1] == "local"
 
 
 if __name__ == "__main__":

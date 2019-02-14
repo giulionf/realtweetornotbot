@@ -7,7 +7,7 @@ import configparser
 import concurrent.futures
 from configparser import ExtendedInterpolation
 from praw import exceptions
-from realtweetornotbot.twitter.tweetfinder import TweetFinder
+from realtweetornotbot.search.tweetfinder import TweetFinder
 
 config = configparser.ConfigParser()
 config._interpolation = ExtendedInterpolation()
@@ -121,7 +121,7 @@ def reply_to_submission(submission, text):
 
 def search_tweets(image_url):
     print("Searching Tweet in Worker: {}".format(image_url))
-    results = TweetFinder.find_tweet_results(image_url)
+    results = TweetFinder.find_tweets(image_url)
     return results
 
 

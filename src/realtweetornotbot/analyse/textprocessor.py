@@ -11,7 +11,7 @@ class TextProcessor:
         found_users = UserProcessor.find_users(text)
         found_dates = DateProcessor.find_dates(text)
         content = ContentProcessor.find_content(text)
-        candidates = TextProcessor.__create_search_criteria_candidates(found_users, found_dates, found_hashtags, content)
+        candidates = TextProcessor.__create_search_criteria_candidates(found_users, found_dates, content)
         return candidates
 
     @staticmethod

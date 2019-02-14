@@ -2,7 +2,7 @@ import GetOldTweets3 as got3
 from fuzzywuzzy import fuzz
 from realtweetornotbot.analyse.imageprocessor import ImageProcessor
 from realtweetornotbot.analyse.textprocessor import TextProcessor
-from searchresult import SearchResult
+from realtweetornotbot.search.searchresult import SearchResult
 
 TWEET_MAX_AMOUNT = 50000
 MAX_RETRIES = 5

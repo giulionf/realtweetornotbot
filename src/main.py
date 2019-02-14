@@ -18,11 +18,11 @@ PASSWORD = os.environ['REDDIT_PASSWORD']
 CLIENT_ID = os.environ['REDDIT_CLIENT_ID']
 CLIENT_SECRET = os.environ['REDDIT_CLIENT_SECRET']
 USER_AGENT = os.environ['REDDIT_USER_AGENT']
+SUBREDDITS = os.environ['REDDIT_SUBREDDITS']
 
 # Bot Data
 CREATOR_NAME = config['BOTDATA']['creator']
 KEYWORD = config['BOTDATA']['keyword']
-SUBREDDITS = config['BOTDATA']['SUBREDDITS']
 
 # Links
 DONATE_LINK = config['LINKS']['donate']

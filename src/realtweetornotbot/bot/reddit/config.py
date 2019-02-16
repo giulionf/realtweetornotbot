@@ -13,6 +13,7 @@ class Config:
     CLIENT_SECRET = os.environ['REDDIT_CLIENT_SECRET']
     USER_AGENT = os.environ['REDDIT_USER_AGENT']
     SUBREDDITS = os.environ['REDDIT_SUBREDDITS']
+    FETCH_COUNT = int(os.environ['REDDIT_FETCH_COUNT'])
 
     # Bot Data
     CREATOR_NAME = config['BOTDATA']['creator']

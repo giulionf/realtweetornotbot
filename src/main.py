@@ -1,19 +1,17 @@
 import time
 from realtweetornotbot.bot.reddit.redditbotimpl import RedditBotImpl
+from realtweetornotbot.bot.multithread import MultiThreadSearcher
 
 SLEEP_TIME = 60 * 30
 
 
 def main():
-    bot = RedditBotImpl()
+    MultiThreadSearcher.init(RedditBotImpl())
 
     while 1:
-        posts = bot.fetch_new_posts()
-        for post in posts:
-            tweets = bot.find_tweet(post)
-            bot.handle_tweet_result(post, tweets)
+        MultiThreadSearcher.start()
         time.sleep(SLEEP_TIME)
-        print("Job Done - Sleeping")
+        print("Job Done - Sleeping\n")
 
 
 if __name__ == "__main__":

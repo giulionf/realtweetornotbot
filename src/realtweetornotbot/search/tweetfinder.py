@@ -3,6 +3,7 @@ from fuzzywuzzy import fuzz
 from realtweetornotbot.analyse.imageprocessor import ImageProcessor
 from realtweetornotbot.analyse.textprocessor import TextProcessor
 from realtweetornotbot.search.searchresult import SearchResult
+from realtweetornotbot.bot.multithread import MultiThreadSearcher
 
 TWEET_MAX_AMOUNT = 50000
 MAX_RETRIES = 5
@@ -13,7 +14,9 @@ class TweetFinder:
 
     @staticmethod
     def find_tweets(image_url):
+        MultiThreadSearcher.tesseract_lock.acquire()
         text = ImageProcessor.image_to_text(image_url)
+        MultiThreadSearcher.tesseract_lock.release()
         search_criteria_candidates = TextProcessor.text_to_search_criteria_candidates(text)
         results = TweetFinder.__get_results(search_criteria_candidates)
         return results

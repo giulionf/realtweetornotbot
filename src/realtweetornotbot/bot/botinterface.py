@@ -8,10 +8,6 @@ class BotInterface(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_image_url_from_post(self, post):
-        pass
-
-    @abc.abstractmethod
     def find_tweet(self, post):
         pass
 

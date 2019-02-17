@@ -3,11 +3,12 @@ import requests
 import pytesseract
 from PIL import Image, ImageEnhance
 
-MIN_WIDTH = 5000
-MIN_HEIGHT = 5000
+MAX_RESOLUTION = 9000000
 
 
 class ImageProcessor:
+
+    debug = False
 
     @staticmethod
     def image_to_text(image_url):
@@ -15,6 +16,9 @@ class ImageProcessor:
         if image:
             image = ImageProcessor.__optimize(image)
             text = pytesseract.image_to_string(image, lang="eng")
+
+            if ImageProcessor.debug:
+                print(text)
             del image
             return text
         else:
@@ -36,10 +40,9 @@ class ImageProcessor:
 
     @staticmethod
     def __scale_to_working_size(image):
-        width = image.size[0]
-        height = image.size[1]
-        scale_x = MIN_WIDTH / width
-        scale_y = MIN_HEIGHT / height
-        scale = max(scale_x, scale_y)
-        image = image.resize((int(width * scale), int(height * scale)), Image.ANTIALIAS)
-        return image
+        width = float(image.size[0])
+        height = float(image.size[1])
+        ratio = width/height
+        new_height = int((MAX_RESOLUTION/ratio)**0.5)
+        new_width = int(new_height * ratio)
+        return image.resize((new_width, new_height), Image.ANTIALIAS)

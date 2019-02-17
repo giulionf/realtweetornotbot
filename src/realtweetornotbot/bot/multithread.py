@@ -1,12 +1,13 @@
 from queue import Queue
 from threading import Thread, Lock
 
-PRODUCER_THREAD_COUNT = 10
+PRODUCER_THREAD_COUNT = 100
 CONSUMER_THREAD_COUNT = 1
 
 post_queue = Queue()
 result_queue = Queue()
 bot_interface = None
+debug = False
 
 
 class MultiThreadSearcher:
@@ -14,9 +15,11 @@ class MultiThreadSearcher:
     tesseract_lock = Lock()
 
     @staticmethod
-    def init(bot_interface_impl):
+    def init(bot_interface_impl, debug_mode=False):
+        global debug
         global bot_interface
         bot_interface = bot_interface_impl
+        debug = debug_mode
 
         for i in range(0, PRODUCER_THREAD_COUNT):
             ProducerThread().start()
@@ -58,6 +61,7 @@ class ConsumerThread(Thread):
     def run(self):
         global result_queue
         global bot_interface
+        global debug
 
         while True:
             result = result_queue.get()
@@ -65,5 +69,8 @@ class ConsumerThread(Thread):
             if result is None:
                 break
 
-            bot_interface.handle_tweet_result(result[0], result[1])
+            if debug:
+                print(result[1])
+            else:
+                bot_interface.handle_tweet_result(result[0], result[1])
             result_queue.task_done()

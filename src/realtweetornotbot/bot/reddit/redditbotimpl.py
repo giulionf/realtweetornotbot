@@ -25,11 +25,8 @@ class RedditBotImpl(BotInterface):
         print("Fetched {} new submissions\n".format(len(image_posts)))
         return image_posts
 
-    def get_image_url_from_post(self, post):
-        return post.url
-
     def find_tweet(self, post):
-        url = self.get_image_url_from_post(post)
+        url = post.url
         print("Searching for tweets in: {}\n".format(url))
         if UrlUtils.is_image_submission(url):
             return TweetFinder.find_tweets(url)

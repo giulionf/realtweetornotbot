@@ -29,4 +29,11 @@ class Config:
     WRONG_POST_TYPE_MESSAGE = config['MESSAGE']['wrong_type']
     SINGLE_TWEET = config['MESSAGE']['single_tweet']
 
+    # Database
+    DATABASE_URL = os.environ['DATABASE_URL']
+    DATABASE_USER = os.environ['DATABASE_USER']
+    DATABASE_PASSWORD = os.environ['DATABASE_PASSWORD']
+    DATABASE_MAX_ROWS = 10000
+    DATABASE_FULL_PADDING = 1000
+
 

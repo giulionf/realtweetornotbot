@@ -6,11 +6,13 @@ from realtweetornotbot.bot.reddit.config import Config
 from realtweetornotbot.bot.botinterface import BotInterface
 from realtweetornotbot.search.tweetfinder import TweetFinder
 from realtweetornotbot.bot.urlutils import UrlUtils
+from realtweetornotbot.bot.reddit.redditdb import RedditDB
 
 ATTEMPT_TIMEOUT = 30
 MAX_TIMEOUT = 11 * 60
 RUN_TIMEOUT = 30 * 60
 
+db = RedditDB()
 praw_client = praw.Reddit(client_id=Config.CLIENT_ID, client_secret=Config.CLIENT_SECRET,
                           user_agent=Config.USER_AGENT, username=Config.USERNAME, password=Config.PASSWORD)
 
@@ -23,6 +25,7 @@ class RedditBotImpl(BotInterface):
             if RedditBotImpl.__is_valid_post(post):
                 image_posts.append(post)
         print("Fetched {} new submissions\n".format(len(image_posts)))
+        db.delete_old_entries_if_db_full(len(image_posts))
         return image_posts
 
     def find_tweet(self, post):
@@ -40,7 +43,7 @@ class RedditBotImpl(BotInterface):
             RedditBotImpl.__try_repeatedly_with_timeout(lambda: RedditBotImpl.__reply_to_post(post, response))
         else:
             print("No results for submission by {} in {}\n".format(post.author.name, post.subreddit.display_name))
-        post.save()
+        db.add_submission_to_seen(post.id)
 
     @staticmethod
     def __try_repeatedly_with_timeout(func):
@@ -66,7 +69,7 @@ class RedditBotImpl(BotInterface):
 
     @staticmethod
     def __is_valid_post(post):
-        return not post.saved and post.url is not None
+        return post.url is not None and not db.is_submission_already_seen(post.id)
 
     @staticmethod
     def __form_comment_response(results):

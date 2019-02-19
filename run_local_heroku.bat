@@ -1,1 +1,1 @@
-heroku local web -f Procfile.windows
+heroku local worker -f Procfile.windows

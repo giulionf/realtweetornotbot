@@ -1,7 +1,7 @@
 from queue import Queue
 from threading import Thread, Lock
 
-PRODUCER_THREAD_COUNT = 100
+PRODUCER_THREAD_COUNT = 20
 CONSUMER_THREAD_COUNT = 1
 
 post_queue = Queue()

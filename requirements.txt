@@ -1,6 +1,5 @@
 backcall==0.1.0
 bleach==3.0.2
-cachetools==3.1.0
 certifi==2018.4.16
 chardet==3.0.4
 colorama==0.4.1
@@ -10,16 +9,9 @@ Cython==0.28.5
 decorator==4.0.11
 defusedxml==0.5.0
 entrypoints==0.2.3
-ez-setup==0.9
 future==0.17.1
 fuzzywuzzy==0.17.0
 GetOldTweets3==0.0.9
-google-api-core==1.7.0
-google-auth==1.6.2
-google-cloud-core==0.29.1
-google-cloud-storage==1.14.0
-google-resumable-media==0.3.2
-googleapis-common-protos==1.5.8
 idna==2.7
 ipykernel==5.1.0
 ipython==7.2.0

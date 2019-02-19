@@ -1,4 +1,5 @@
 from queue import Queue
+from queue import Empty
 from threading import Thread, Lock
 
 PRODUCER_THREAD_COUNT = 20
@@ -8,6 +9,7 @@ post_queue = Queue()
 result_queue = Queue()
 bot_interface = None
 debug = False
+threads = []
 
 
 class MultiThreadSearcher:
@@ -22,10 +24,14 @@ class MultiThreadSearcher:
         debug = debug_mode
 
         for i in range(0, PRODUCER_THREAD_COUNT):
-            ProducerThread().start()
+            t = ProducerThread()
+            threads.append(t)
+            t.start()
 
         for i in range(0, CONSUMER_THREAD_COUNT):
-            ConsumerThread().start()
+            t = ConsumerThread()
+            threads.append(t)
+            t.start()
 
     @staticmethod
     def start():
@@ -39,38 +45,46 @@ class MultiThreadSearcher:
 
         post_queue.join()
         result_queue.join()
+        MultiThreadSearcher.stop()
+
+    @staticmethod
+    def stop():
+        for thread in threads:
+            thread.stopped = True
 
 
 class ProducerThread(Thread):
+    stopped = False
+
     def run(self):
-        while True:
-            global post_queue
-            global bot_interface
+        global post_queue
+        global bot_interface
 
-            post = post_queue.get()
-            post_queue.task_done()
-
-            if post is None:
-                break
-
-            tweets = bot_interface.find_tweet(post)
-            result_queue.put((post, tweets))
+        while not self.stopped:
+            try:
+                post = post_queue.get_nowait()
+                tweets = bot_interface.find_tweet(post)
+                result_queue.put((post, tweets))
+                post_queue.task_done()
+            except Empty:
+                pass
 
 
 class ConsumerThread(Thread):
+    stopped = False
+
     def run(self):
         global result_queue
         global bot_interface
         global debug
 
-        while True:
-            result = result_queue.get()
-
-            if result is None:
-                break
-
-            if debug:
-                print(result[1])
-            else:
-                bot_interface.handle_tweet_result(result[0], result[1])
-            result_queue.task_done()
+        while not self.stopped:
+            try:
+                result = result_queue.get_nowait()
+                if debug:
+                    print(result[1])
+                else:
+                    bot_interface.handle_tweet_result(result[0], result[1])
+                result_queue.task_done()
+            except Empty:
+                pass

@@ -7,6 +7,7 @@ from realtweetornotbot.bot.botinterface import BotInterface
 from realtweetornotbot.search.tweetfinder import TweetFinder
 from realtweetornotbot.bot.urlutils import UrlUtils
 from realtweetornotbot.bot.reddit.redditdb import RedditDB
+from realtweetornotbot.bot.logger import Logger
 
 ATTEMPT_TIMEOUT = 30
 MAX_TIMEOUT = 11 * 60
@@ -24,13 +25,12 @@ class RedditBotImpl(BotInterface):
         for post in praw_client.subreddit(Config.SUBREDDITS).hot(limit=Config.FETCH_COUNT):
             if RedditBotImpl.__is_valid_post(post):
                 image_posts.append(post)
-        print("Fetched {} new submissions\n".format(len(image_posts)))
         db.delete_old_entries_if_db_full(len(image_posts))
+        Logger.log_fetch_count(len(image_posts))
         return image_posts
 
     def find_tweet(self, post):
         url = post.url
-        print("Searching for tweets in: {}\n".format(url))
         if UrlUtils.is_image_submission(url):
             return TweetFinder.find_tweets(url)
         elif UrlUtils.is_imgur_submission(url):
@@ -38,11 +38,11 @@ class RedditBotImpl(BotInterface):
 
     def handle_tweet_result(self, post, tweets):
         if tweets and len(tweets) > 0:
-            print("{} tweets: Replying to {} ({})\n".format(len(tweets), post.author.name, post.subreddit.display_name))
+            Logger.log_tweet_found(post.id, post.url)
             response = RedditBotImpl.__form_comment_response(tweets)
             RedditBotImpl.__try_repeatedly_with_timeout(lambda: RedditBotImpl.__reply_to_post(post, response))
         else:
-            print("No results for submission by {} in {}\n".format(post.author.name, post.subreddit.display_name))
+            Logger.log_no_results(post.id, post.url)
         db.add_submission_to_seen(post.id)
 
     @staticmethod
@@ -56,10 +56,10 @@ class RedditBotImpl(BotInterface):
             except Exception as e:
                 if not isinstance(e, praw.exceptions.APIException) or time.time() - start_time >= MAX_TIMEOUT:
                     RedditBotImpl.__send_pm_with_error_to_creator(traceback.format_exc())
-                    print("Error occured\n")
+                    Logger.log_error()
                 else:
                     too_many_tries_exception = True
-                    print("PRAW API Exception!: {}\n".format(str(e)))
+                    Logger.log_error_stacktrace(str(e))
                     time.sleep(ATTEMPT_TIMEOUT)
 
     @staticmethod

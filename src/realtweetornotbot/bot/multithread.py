@@ -1,6 +1,7 @@
 from queue import Queue
 from queue import Empty
 from threading import Thread, Lock
+from realtweetornotbot.bot.logger import Logger
 
 PRODUCER_THREAD_COUNT = 20
 CONSUMER_THREAD_COUNT = 1
@@ -22,6 +23,7 @@ class MultiThreadSearcher:
         global bot_interface
         bot_interface = bot_interface_impl
         debug = debug_mode
+        Logger.log_dispatching_threads(PRODUCER_THREAD_COUNT, CONSUMER_THREAD_COUNT)
 
         for i in range(0, PRODUCER_THREAD_COUNT):
             t = ProducerThread()

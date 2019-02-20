@@ -1,5 +1,6 @@
 from realtweetornotbot.persist.postgreshelper import PostGresHelper
 from realtweetornotbot.bot.reddit.config import Config
+from realtweetornotbot.bot.logger import Logger
 
 
 class RedditDB(PostGresHelper):
@@ -20,7 +21,7 @@ class RedditDB(PostGresHelper):
         self._execute("SELECT COUNT(post_id) FROM seen_posts;")
         cur_entries = int(self._fetch_one()[0])
         if cur_entries + new_entries_count >= Config.DATABASE_MAX_ROWS - Config.DATABASE_FULL_PADDING:
-            print("DELETING LAST {} DB ENTRIES TO MAKE ROOM".format(new_entries_count))
+            Logger.log_db_deletion(new_entries_count)
             self._execute("DELETE FROM seen_posts WHERE id IN (SELECT id FROM seen_posts ORDER BY id ASC LIMIT {});"
                           .format(new_entries_count))
             self._commit()

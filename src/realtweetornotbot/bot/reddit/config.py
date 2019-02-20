@@ -17,10 +17,8 @@ class Config:
 
     # Bot Data
     CREATOR_NAME = config['BOTDATA']['creator']
-    KEYWORD = config['BOTDATA']['keyword']
 
     # Links
-    DONATE_LINK = config['LINKS']['donate']
     SOURCE_LINK = config['LINKS']['source']
     SUBREDDIT_LINK = config['LINKS']['subreddit']
 

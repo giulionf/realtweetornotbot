@@ -1,6 +1,7 @@
 import praw
 import time
 import traceback
+from datetime import timedelta
 from praw import exceptions
 from realtweetornotbot.bot.reddit.config import Config
 from realtweetornotbot.bot.botinterface import BotInterface
@@ -27,6 +28,12 @@ class RedditBotImpl(BotInterface):
                 image_posts.append(post)
         db.delete_old_entries_if_db_full(len(image_posts))
         Logger.log_fetch_count(len(image_posts))
+
+        if db.get_time_diff_since_last_summary().hour > 12:
+            summary = db.get_summary()
+            db.persist_summary(summary)
+            RedditBotImpl.__send_summary_to_creator(summary)
+
         return image_posts
 
     def find_tweet(self, post):
@@ -41,9 +48,10 @@ class RedditBotImpl(BotInterface):
             Logger.log_tweet_found(post.id, post.url)
             response = RedditBotImpl.__form_comment_response(tweets)
             RedditBotImpl.__try_repeatedly_with_timeout(lambda: RedditBotImpl.__reply_to_post(post, response))
+            db.add_submission_to_seen(post.id, tweets[0].tweet.permalink)
         else:
             Logger.log_no_results(post.id, post.url)
-        db.add_submission_to_seen(post.id)
+            db.add_submission_to_seen(post.id)
 
     @staticmethod
     def __try_repeatedly_with_timeout(func):
@@ -91,3 +99,10 @@ class RedditBotImpl(BotInterface):
 
         if not is_old_error:
             praw_client.redditor(Config.CREATOR_NAME).message("New error", str(error))
+
+    @staticmethod
+    def __send_summary_to_creator(summary):
+        posts_seen = summary[0]
+        tweets_found = summary[1]
+        message = "New Summary:\n\nPosts Seen: {}\nTweets Found: {}".format(str(posts_seen), str(tweets_found))
+        praw_client.redditor(Config.CREATOR_NAME).message("Summary", message)

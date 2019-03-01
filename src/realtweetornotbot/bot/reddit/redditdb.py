@@ -10,7 +10,7 @@ class RedditDB(PostGresHelper):
         super().__init__(Config.DATABASE_URL, Config.DATABASE_USER, Config.DATABASE_PASSWORD)
 
     def add_submission_to_seen(self, submission_id, tweet_link=""):
-        self._execute("INSERT INTO seen_posts (post_id, found_tweet) VALUES ('{}, {}');"
+        self._execute("INSERT INTO seen_posts (post_id, found_tweet) VALUES ('{}', '{}');"
                       .format(str(submission_id), tweet_link))
         self._commit()
 

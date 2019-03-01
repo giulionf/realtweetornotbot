@@ -31,7 +31,7 @@ class RedditBotImpl(BotInterface):
 
         time_since_last_summary = db.get_time_diff_since_last_summary().hour
         Logger.log_summary_time(time_since_last_summary)
-        if time_since_last_summary > 12:
+        if time_since_last_summary > timedelta(hours=12):
             summary = db.get_summary()
             db.persist_summary(summary)
             RedditBotImpl.__send_summary_to_creator(summary)

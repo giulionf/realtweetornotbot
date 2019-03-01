@@ -29,3 +29,7 @@ class Logger:
     @staticmethod
     def log_dispatching_threads(producer_count, consumer_count):
         print("<MAIN THREAD> Starting: Producers ({}) and Consumers ({})\n".format(producer_count, consumer_count))
+
+    @staticmethod
+    def log_summary_time(timedelta):
+        print("<MAIN THREAD> Time Diff to last summary: {}".format(str(timedelta)))

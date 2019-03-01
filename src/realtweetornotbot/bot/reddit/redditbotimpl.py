@@ -29,7 +29,7 @@ class RedditBotImpl(BotInterface):
         db.delete_old_entries_if_db_full(len(image_posts))
         Logger.log_fetch_count(len(image_posts))
 
-        time_since_last_summary = db.get_time_diff_since_last_summary().hour
+        time_since_last_summary = db.get_time_diff_since_last_summary()
         Logger.log_summary_time(time_since_last_summary)
         if time_since_last_summary > timedelta(hours=12):
             summary = db.get_summary()

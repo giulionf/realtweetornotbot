@@ -41,5 +41,5 @@ class RedditDB(PostGresHelper):
         return posts_seen, tweets_found
 
     def persist_summary(self, summary):
-        self._execute("INSERT INTO summary(posts_seen, tweets_found, last_post_id) VALUES({}, {}, SELECT id FROM seen_posts ORDER BY id DESC LIMIT 1);".format(summary[0], summary[1]))
+        self._execute("INSERT INTO summary(posts_seen, tweets_found, last_post_id) VALUES({}, {}, (SELECT id FROM seen_posts ORDER BY id DESC LIMIT 1));".format(summary[0], summary[1]))
         self._commit()

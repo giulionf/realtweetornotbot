@@ -8,17 +8,12 @@ MAX_RESOLUTION = 9000000
 
 class ImageProcessor:
 
-    debug = False
-
     @staticmethod
     def image_to_text(image_url):
         image = ImageProcessor.__get_image(image_url)
         if image:
             image = ImageProcessor.__optimize(image)
             text = pytesseract.image_to_string(image, lang="eng")
-
-            if ImageProcessor.debug:
-                print(text)
             del image
             return text
         else:

@@ -1,11 +1,11 @@
-from realtweetornotbot.bot.debug.debugbotimpl import DebugBotImpl
-from realtweetornotbot.bot.multithread import MultiThreadSearcher
+from realtweetornotbot import DebugBot, MultiThreadSearcher
 
 
 def main():
-    MultiThreadSearcher.init(DebugBotImpl())
+    print("Starting Bot in Debug Mode\n")
+    MultiThreadSearcher.init(DebugBot())
     MultiThreadSearcher.start()
-    print("Job Done - Waiting for next schedule\n")
+    print("Bot Done")
 
 
 if __name__ == "__main__":

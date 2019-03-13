@@ -1,9 +1,9 @@
-from realtweetornotbot.bot.reddit.redditbotimpl import RedditBotImpl
-from realtweetornotbot.bot.multithread import MultiThreadSearcher
+from realtweetornotbot import Bot, MultiThreadSearcher
 
 
 def main():
-    MultiThreadSearcher.init(RedditBotImpl())
+    print("Starting Bot\n")
+    MultiThreadSearcher.init(Bot())
     MultiThreadSearcher.start()
     print("Job Done - Waiting for next schedule\n")
 

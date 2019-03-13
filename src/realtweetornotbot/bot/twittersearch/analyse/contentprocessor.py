@@ -2,11 +2,12 @@ import re
 
 
 class ContentProcessor:
-
+    """ Helper class for extracting a tweet's content out of OCR-read text """
     CONTENT_REGEX = r"[^a-zA-Z0-9]"
 
     @staticmethod
     def find_content(text):
+        """ Returns the tweet's content within the total OCR text as string"""
         content = re.sub('[^A-Za-z \n]+', ' ', text)                                          # Remove all special signs
         content = re.sub('\n+', ' ', content)                                                 # Replace newline by space
         content = re.sub(' +', ' ', content)                                                  # Strip multiple spaces

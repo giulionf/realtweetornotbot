@@ -3,13 +3,15 @@ import requests
 import pytesseract
 from PIL import Image, ImageEnhance
 
-MAX_RESOLUTION = 9000000
+MAX_RESOLUTION = 9000000    # the max. amount of pixels allowed when up-scaling an image for OCR
 
 
 class ImageProcessor:
+    """ Helper class for extracting text out of an image url """
 
     @staticmethod
     def image_to_text(image_url):
+        """ Downloads the image and reads its text. If no text could be read, it will return an empty string """
         image = ImageProcessor.__get_image(image_url)
         if image:
             image = ImageProcessor.__optimize(image)

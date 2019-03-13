@@ -1,24 +1,30 @@
-import GetOldTweets3 as got3
 from fuzzywuzzy import fuzz
-from realtweetornotbot.analyse.imageprocessor import ImageProcessor
-from realtweetornotbot.analyse.textprocessor import TextProcessor
-from realtweetornotbot.search.searchresult import SearchResult
-from realtweetornotbot.bot.multithread import MultiThreadSearcher
+from GetOldTweets3.manager import TweetCriteria, TweetManager
+from twittersearch import CriteriaBuilder, Result
 
-TWEET_MAX_AMOUNT = 50000
-MAX_RETRIES = 5
-MIN_SCORE = 65
+TWEET_MAX_AMOUNT = 50000    # Limit for Tweet crawling
+MAX_RETRIES = 5             # Limit for retries of Tweet Crawling when 0 was returned as result length
+MIN_SCORE = 65              # Minimum score to be displayed as result
 
 
 class TweetFinder:
+    """ Helper class to find tweets given a URL of an image """
 
     @staticmethod
-    def find_tweets(image_url):
-        MultiThreadSearcher.tesseract_lock.acquire()
-        text = ImageProcessor.image_to_text(image_url)
-        MultiThreadSearcher.tesseract_lock.release()
-        search_criteria_candidates = TextProcessor.text_to_search_criteria_candidates(text)
-        results = TweetFinder.__get_results(search_criteria_candidates)
+    def build_criteria_for_image(image_url):
+        """ Builds a list of possible criteria for a given tweet image url """
+        return CriteriaBuilder.image_to_search_criteria_candidates(image_url)
+
+    @staticmethod
+    def find_tweets(criteria_candidates):
+        """ Returns a list of twittersearch.result with the given search results for each candidate
+
+        Parameters
+        ----------
+        criteria_candidates : list of twittersearch.criteria
+            Criteria Candidates for a given tweet image.
+        """
+        results = TweetFinder.__get_results(criteria_candidates)
         return results
 
     @staticmethod
@@ -48,10 +54,10 @@ class TweetFinder:
 
     @staticmethod
     def __get_tweet_for_search_criteria(search_criteria):
-        got3_criteria = got3.manager.TweetCriteria() \
-            .setMaxTweets(TWEET_MAX_AMOUNT)
+        got3_criteria = TweetCriteria().setMaxTweets(TWEET_MAX_AMOUNT)
         if search_criteria.date:
-            got3_criteria.setSince(search_criteria.format_from_date()) \
+            got3_criteria\
+                .setSince(search_criteria.format_from_date())\
                 .setUntil(search_criteria.format_to_date())
         if search_criteria.user:
             got3_criteria.setUsername(search_criteria.user)
@@ -59,18 +65,20 @@ class TweetFinder:
             got3_criteria.setQuerySearch(search_criteria.format_content_to_or_query())
 
         try:
-            tweets = got3.manager.TweetManager.getTweets(got3_criteria)
+            tweets = TweetManager.getTweets(got3_criteria)
         except Exception as e:
             print("Could not get tweets: " + str(e))
             tweets = []
 
-        sorted_tweets = sorted(tweets, reverse=True, key=lambda tweet: TweetFinder.__score_result(tweet, search_criteria))
+        sorted_tweets = sorted(tweets,
+                               reverse=True,
+                               key=lambda x: TweetFinder.__score_result(x, search_criteria))
 
         if len(sorted_tweets) > 0:
             tweet = sorted_tweets[0]
             score = TweetFinder.__score_result(tweet, search_criteria)
             if score >= MIN_SCORE:
-                return SearchResult(search_criteria, tweet, score)
+                return Result(search_criteria, tweet, score)
 
         return None
 

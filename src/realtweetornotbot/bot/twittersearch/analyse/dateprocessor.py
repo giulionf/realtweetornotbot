@@ -3,6 +3,7 @@ from datetime import datetime
 
 
 class DateProcessor:
+    """ Helper class for extracting dates out of OCR-read text """
 
     DATE_REGEX_1 = r"\d{1,2}\s?[A-Za-z]{3}\s?\d{4}"             # 02 Feb 2018,   2 Feb 2018
     DATE_REGEX_2 = r"\d{1,2}\s?[A-Za-z]{3}\s?\d{2}"             # 02 Feb 18,     2 Feb 18
@@ -12,6 +13,7 @@ class DateProcessor:
 
     @staticmethod
     def find_dates(text):
+        """ Returns the tweet's content within the total OCR text as string"""
         dates = []
         dates.extend(DateProcessor.__find_dates(text, DateProcessor.DATE_REGEX_1, "%d %b %Y"))
         if len(dates) == 0:

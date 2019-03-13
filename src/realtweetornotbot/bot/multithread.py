@@ -1,7 +1,7 @@
 from queue import Queue
 from queue import Empty
 from threading import Thread, Lock
-from realtweetornotbot.bot.logger import Logger
+from utils import Logger
 
 PRODUCER_THREAD_COUNT = 20
 CONSUMER_THREAD_COUNT = 1
@@ -9,20 +9,19 @@ CONSUMER_THREAD_COUNT = 1
 post_queue = Queue()
 result_queue = Queue()
 bot_interface = None
-debug = False
 threads = []
 
 
 class MultiThreadSearcher:
+    """ Multi-threading scheduler for the bot """
 
     tesseract_lock = Lock()
 
     @staticmethod
-    def init(bot_interface_impl, debug_mode=False):
-        global debug
+    def init(bot_interface_impl):
+        """ Initialises the scheduler with the bot """
         global bot_interface
         bot_interface = bot_interface_impl
-        debug = debug_mode
         Logger.log_dispatching_threads(PRODUCER_THREAD_COUNT, CONSUMER_THREAD_COUNT)
 
         for i in range(0, PRODUCER_THREAD_COUNT):
@@ -78,15 +77,11 @@ class ConsumerThread(Thread):
     def run(self):
         global result_queue
         global bot_interface
-        global debug
 
         while not self.stopped:
             try:
                 result = result_queue.get_nowait()
-                if debug:
-                    print(result[1])
-                else:
-                    bot_interface.handle_tweet_result(result[0], result[1])
+                bot_interface.handle_tweet_result(result[0], result[1])
                 result_queue.task_done()
             except Empty:
                 pass

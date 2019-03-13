@@ -3,9 +3,10 @@ from configparser import ConfigParser, ExtendedInterpolation
 
 
 class Config:
+    """ Holds all the configureations for a bot """
     config = ConfigParser()
     config._interpolation = ExtendedInterpolation()
-    config.read(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../../../config.ini"))
+    config.read(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../../config.ini"))
 
     USERNAME = os.environ['REDDIT_USERNAME']
     PASSWORD = os.environ['REDDIT_PASSWORD']
@@ -33,5 +34,4 @@ class Config:
     DATABASE_PASSWORD = os.environ['DATABASE_PASSWORD']
     DATABASE_MAX_ROWS = 10000
     DATABASE_FULL_PADDING = 1000
-
-
+    DATABASE_SUMMARY_INTERVAL = 24

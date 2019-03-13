@@ -1,7 +1,7 @@
 import psycopg2
-from bot import Config
 from datetime import datetime
-from utils import Logger
+from realtweetornotbot.bot import Config
+from realtweetornotbot.utils import Logger
 
 
 class Database:

@@ -1,7 +1,7 @@
 from queue import Queue
 from queue import Empty
 from threading import Thread, Lock
-from utils import Logger
+from realtweetornotbot.utils import Logger
 
 PRODUCER_THREAD_COUNT = 20
 CONSUMER_THREAD_COUNT = 1

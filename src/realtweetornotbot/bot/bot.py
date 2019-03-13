@@ -3,8 +3,8 @@ import time
 import traceback
 from datetime import timedelta
 from praw import exceptions
-from bot import Config, Database, DebugBot
-from utils import Logger
+from realtweetornotbot.bot import Config, Database, DebugBot
+from realtweetornotbot.utils import Logger
 
 ATTEMPT_TIMEOUT = 30
 MAX_TIMEOUT = 11 * 60

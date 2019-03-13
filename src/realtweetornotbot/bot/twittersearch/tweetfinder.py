@@ -1,6 +1,6 @@
 from fuzzywuzzy import fuzz
 from GetOldTweets3.manager import TweetCriteria, TweetManager
-from twittersearch import CriteriaBuilder, Result
+from realtweetornotbot.bot.twittersearch import CriteriaBuilder, Result
 
 TWEET_MAX_AMOUNT = 50000    # Limit for Tweet crawling
 MAX_RETRIES = 5             # Limit for retries of Tweet Crawling when 0 was returned as result length

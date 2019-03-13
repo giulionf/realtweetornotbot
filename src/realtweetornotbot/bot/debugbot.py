@@ -1,8 +1,7 @@
 import praw
-from bot import Config
-from multithread import MultiThreadSearcher
-from tweetfinder import TweetFinder
-from utils import Logger, UrlUtils
+from realtweetornotbot.bot import Config, MultiThreadSearcher
+from realtweetornotbot.bot.twittersearch import TweetFinder
+from realtweetornotbot.utils import Logger, UrlUtils
 
 
 class DebugBot:

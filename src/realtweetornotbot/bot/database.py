@@ -32,10 +32,17 @@ class Database:
         """ Makes space in the database if the new post addition would overstep the total row limit """
         self.__cursor.execute("SELECT COUNT(post_id) FROM seen_posts;")
         cur_entries = int(self.__cursor.fetchone()[0])
-        if cur_entries + new_entries_count >= Config.DATABASE_MAX_ROWS - Config.DATABASE_FULL_PADDING:
+        if cur_entries + new_entries_count >= Config.DATABASE_MAX_POSTS:
             Logger.log_db_deletion(new_entries_count)
             self.__cursor.execute("DELETE FROM seen_posts WHERE id IN (SELECT id FROM seen_posts ORDER BY id ASC LIMIT {});".format(new_entries_count))
             self.__connection.commit()
+
+    def delete_old_summaries_if_db_full(self):
+        self.__cursor.execute("""SELECT COUNT(id) FROM summary""")
+        cur_entries = int(self.__cursor.fetchone()[0])
+        if cur_entries >= Config.DATABASE_MAX_SUMMARIES:
+            Logger.log_db_summary_deletion()
+            self.__cursor.execute("""DELETE FROM summary WHERE id IN (SELECT id FROM summary ORDER BY id ASC LIMIT 1)""")
 
     def get_time_diff_since_last_summary(self):
         """ Returns the time diff to the last summary"""

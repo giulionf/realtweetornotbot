@@ -34,6 +34,11 @@ class Logger:
         print("DB >>> Deleting last {} submission IDs\n".format(delete_count))
 
     @staticmethod
+    def log_db_summary_deletion():
+        """ Logs the deletion of a summary inside the Database """
+        print("DB >>> Deleting last summary\n")
+
+    @staticmethod
     def log_dispatching_threads(producer_count, consumer_count):
         """ Logs the dispatching of worker threads """
         print("<MAIN THREAD> Starting: Producers ({}) and Consumers ({})\n".format(producer_count, consumer_count))

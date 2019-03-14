@@ -60,8 +60,9 @@ class Bot(DebugBot):
     def __update_database_summary(self):
         time_since_last_summary = db.get_time_diff_since_last_summary()
         Logger.log_summary_time(time_since_last_summary)
-        if time_since_last_summary > timedelta(hours=Config.DATABASE_SUMMARY_INTERVAL):
+        if time_since_last_summary > timedelta(hours=Config.DATABASE_SUMMARY_INTERVAL_HOURS):
             summary = db.get_summary()
+            db.delete_old_summaries_if_db_full()
             db.persist_summary(summary)
             self.__send_summary_to_creator(summary)
 

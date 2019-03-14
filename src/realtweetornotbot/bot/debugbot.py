@@ -2,6 +2,7 @@ import praw
 from realtweetornotbot.bot import Config, MultiThreadSearcher
 from realtweetornotbot.bot.twittersearch import TweetFinder
 from realtweetornotbot.utils import Logger, UrlUtils
+from realtweetornotbot.bot.twittersearch.analyse import TweetDetector
 
 
 class DebugBot:
@@ -13,6 +14,7 @@ class DebugBot:
                                         user_agent=Config.USER_AGENT,
                                         username=Config.USERNAME,
                                         password=Config.PASSWORD)
+        self.tweet_detector = TweetDetector()
 
     def fetch_new_posts(self):
         """ Fetches new posts to work off
@@ -71,7 +73,13 @@ class DebugBot:
             Logger.log_no_results(post.id, post.url)
 
     def _is_valid_post(self, post):
-        return post.url is not None
+        if post.url is not None:
+            if self.tweet_detector.is_url_tweet(post.url):
+                print("IS TWEET: {}".format(post.url))
+                return True
+            else:
+                print("IS NOT TWEET: {}".format(post.url))
+                return False
 
     @staticmethod
     def _form_comment_response(results):

@@ -1,4 +1,6 @@
-IMAGE_TYPES = ["jpg", "png", "jpeg", "webp"]    # Types of images that can be processed
+import requests
+
+IMAGE_FORMATS = ("image/png", "image/jpeg", "image/jpg", "image/webp")
 
 
 class UrlUtils:
@@ -11,6 +13,8 @@ class UrlUtils:
 
     @staticmethod
     def is_image_url(url):
-        """ Returns true, if the URL is to an image file """
-        return any(data_type in url for data_type in IMAGE_TYPES)
-
+        """ Returns true if the url is to an image file """
+        r = requests.head(url)
+        if r.headers["content-type"] in IMAGE_FORMATS:
+            return True
+        return False

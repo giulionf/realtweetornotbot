@@ -81,7 +81,7 @@ class Bot(DebugBot):
         praw_lock.release()
 
     def _is_valid_post(self, post):
-        return post.url is not None and not db.is_submission_already_seen(post.id)
+        return super()._is_valid_post(post) and not db.is_submission_already_seen(post.id)
 
     def __reply_to_post(self, post, text):
         if self._is_valid_post(post):

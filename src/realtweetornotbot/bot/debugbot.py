@@ -1,4 +1,5 @@
 import praw
+from datetime import datetime, timedelta
 from realtweetornotbot.bot import Config
 from realtweetornotbot.bot.twittersearch import TweetFinder
 from realtweetornotbot.utils import Logger, UrlUtils
@@ -69,7 +70,9 @@ class DebugBot:
             Logger.log_no_results(post.id, post.url)
 
     def _is_valid_post(self, post):
-        return post.url is not None
+        creation_date = datetime.fromtimestamp(post.created)
+        post_age = datetime.now() - creation_date
+        return post.url is not None and post_age <= timedelta(days=Config.POST_MAX_AGE_DAYS)
 
     @staticmethod
     def _form_comment_response(results):

@@ -1,5 +1,5 @@
 import praw
-from realtweetornotbot.bot import Config, MultiThreadSearcher
+from realtweetornotbot.bot import Config
 from realtweetornotbot.bot.twittersearch import TweetFinder
 from realtweetornotbot.utils import Logger, UrlUtils
 
@@ -44,14 +44,12 @@ class DebugBot:
         """
         url = post.url
 
-        MultiThreadSearcher.tesseract_lock.acquire()
         if UrlUtils.is_image_url(url):
             criteria = TweetFinder.build_criteria_for_image(url)
         elif UrlUtils.is_imgur_url(url):
             criteria = TweetFinder.build_criteria_for_image(url)
         else:
             criteria = []
-        MultiThreadSearcher.tesseract_lock.release()
 
         return TweetFinder.find_tweets(criteria)
 

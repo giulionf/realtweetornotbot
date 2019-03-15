@@ -1,3 +1,4 @@
+import threading
 
 
 class Logger:
@@ -11,12 +12,14 @@ class Logger:
     @staticmethod
     def log_tweet_found(post_id, image_url):
         """ Logs that a tweet to a given post_id has been found """
-        print("<WORKER - FOUND TWEET>\nPost: https://www.reddit.com/{}\nTweet: {}\n".format(post_id, image_url))
+        print("<WORKER-{} - FOUND TWEET>\nPost: https://www.reddit.com/{}\nTweet: {}\n"
+              .format(threading.currentThread().getName(), post_id, image_url))
 
     @staticmethod
     def log_no_results(post_id, image_url):
         """ Logs that a worker has not found any tweet result for a given post_id """
-        print("<WORKER - NO RESULTS>\nPost: https://www.reddit.com/{}\nImage: {}\n".format(post_id, image_url))
+        print("<WORKER-{} - NO RESULTS>\nPost: https://www.reddit.com/{}\nImage: {}\n"
+              .format(threading.currentThread().getName(), post_id, image_url))
 
     @staticmethod
     def log_error():

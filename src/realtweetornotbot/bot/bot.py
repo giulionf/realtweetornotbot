@@ -3,6 +3,7 @@ import time
 import traceback
 from datetime import timedelta
 from praw import exceptions
+from threading import Lock
 from realtweetornotbot.bot import Config, Database, DebugBot
 from realtweetornotbot.utils import Logger
 
@@ -11,6 +12,7 @@ MAX_TIMEOUT = 11 * 60
 RUN_TIMEOUT = 30 * 60
 
 db = Database()
+praw_lock = Lock()
 
 
 class Bot(DebugBot):
@@ -51,11 +53,15 @@ class Bot(DebugBot):
                     time.sleep(ATTEMPT_TIMEOUT)
 
     def __send_pm_with_error_to_creator(self, error):
+        praw_lock.acquire()
         last_100_pms = self._praw_client.inbox.sent(limit=100)
+        praw_lock.release()
         is_old_error = any(pm.body == str(error) for pm in last_100_pms)
 
         if not is_old_error:
+            praw_lock.acquire()
             self._praw_client.redditor(Config.CREATOR_NAME).message("New error", str(error))
+            praw_lock.release()
 
     def __update_database_summary(self):
         time_since_last_summary = db.get_time_diff_since_last_summary()
@@ -70,11 +76,15 @@ class Bot(DebugBot):
         posts_seen = summary[0]
         tweets_found = summary[1]
         message = "New Summary:\n\nPosts Seen: {}\nTweets Found: {}".format(str(posts_seen), str(tweets_found))
+        praw_lock.acquire()
         self._praw_client.redditor(Config.CREATOR_NAME).message("Summary", message)
+        praw_lock.release()
 
     def _is_valid_post(self, post):
         return post.url is not None and not db.is_submission_already_seen(post.id)
 
     def __reply_to_post(self, post, text):
         if self._is_valid_post(post):
+            praw_lock.acquire()
             post.reply(text)
+            praw_lock.release()

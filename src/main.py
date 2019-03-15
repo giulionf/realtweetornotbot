@@ -3,9 +3,9 @@ from realtweetornotbot import Bot, MultiThreadSearcher
 
 def main():
     print("Starting Bot\n")
-    MultiThreadSearcher.init(Bot())
-    MultiThreadSearcher.start()
-    print("Job Done - Waiting for next schedule\n")
+    scheduler = MultiThreadSearcher(Bot())
+    scheduler.schedule()
+    print("Scheduler done - Workers running\n")
 
 
 if __name__ == "__main__":

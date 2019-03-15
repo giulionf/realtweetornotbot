@@ -1,87 +1,72 @@
-from queue import Queue
-from queue import Empty
+from copy import deepcopy
 from threading import Thread, Lock
-from realtweetornotbot.utils import Logger
 
-PRODUCER_THREAD_COUNT = 20
-CONSUMER_THREAD_COUNT = 1
+WORKER_THREAD_LIMIT = 20  # Limit for the number of concurrently running worker threads
 
-post_queue = Queue()
-result_queue = Queue()
-bot_interface = None
-threads = []
+pop_lock = Lock()  # Lock for popping the top of the post_queue
 
 
 class MultiThreadSearcher:
     """ Multi-threading scheduler for the bot """
 
-    tesseract_lock = Lock()
+    def __init__(self, bot):
+        self.bot = bot
+        self.post_queue = []
+        self.workers = []
 
-    @staticmethod
-    def init(bot_interface_impl):
-        """ Initialises the scheduler with the bot """
-        global bot_interface
-        bot_interface = bot_interface_impl
-        Logger.log_dispatching_threads(PRODUCER_THREAD_COUNT, CONSUMER_THREAD_COUNT)
+    def schedule(self):
+        """ Fetches new posts. Uses the already running workers or starts new ones if needed """
+        self.__get_new_posts()
+        additional_workers_needed = min(WORKER_THREAD_LIMIT, len(self.post_queue)) - len(self.workers)
+        if additional_workers_needed > 0:
+            for i in range(0, additional_workers_needed):
+                self.__create_new_worker()
 
-        for i in range(0, PRODUCER_THREAD_COUNT):
-            t = ProducerThread()
-            threads.append(t)
-            t.start()
+    def remove_worker(self, worker):
+        """ Removes a worker from the list of workers. Will not terminate that worker if it hasn't finished! """
+        self.workers.remove(worker)
+        print("Removed Workers, {} workers left".format(len(self.workers)))
 
-        for i in range(0, CONSUMER_THREAD_COUNT):
-            t = ConsumerThread()
-            threads.append(t)
-            t.start()
+    def pop_next_post(self):
+        """ Pops the next post out of the post queue """
+        pop_lock.acquire()
+        if len(self.post_queue) > 0:
+            post = self.post_queue[0]
+            self.post_queue.remove(post)
+        else:
+            post = None
+        pop_lock.release()
+        return post
 
-    @staticmethod
-    def start():
-        global bot_interface
-        global post_queue
-        global result_queue
+    def __get_new_posts(self):
+        new_posts = self.bot.fetch_new_posts()
+        self.post_queue.extend(new_posts)
 
-        new_posts = bot_interface.fetch_new_posts()
-        for new_post in new_posts:
-            post_queue.put(new_post)
+    def __create_new_worker(self):
+        assigned_post = self.pop_next_post()
+        worker = MultiThreadSearcher.Worker(assigned_post, self, self.bot)
+        self.workers.append(worker)
+        worker.start()
 
-        post_queue.join()
-        result_queue.join()
-        MultiThreadSearcher.stop()
+    class Worker(Thread):
+        """ Worker Thread for a post. Once it's done, it will reschedule itself with a new post or terminate """
 
-    @staticmethod
-    def stop():
-        for thread in threads:
-            thread.stopped = True
+        def __init__(self, post, scheduler, bot):
+            super().__init__()
+            self.post = post
+            self.scheduler = scheduler
+            self.bot = deepcopy(bot)
 
+        def run(self) -> None:
+            tweets = self.bot.find_tweet(self.post)
+            self.bot.handle_tweet_result(self.post, tweets)
 
-class ProducerThread(Thread):
-    stopped = False
+            next_post = self.scheduler.pop_next_post()
+            if next_post is not None:
+                self.__restart_with_new_post(next_post)
+            else:
+                self.scheduler.remove_worker(self)
 
-    def run(self):
-        global post_queue
-        global bot_interface
-
-        while not self.stopped:
-            try:
-                post = post_queue.get_nowait()
-                tweets = bot_interface.find_tweet(post)
-                result_queue.put((post, tweets))
-                post_queue.task_done()
-            except Empty:
-                pass
-
-
-class ConsumerThread(Thread):
-    stopped = False
-
-    def run(self):
-        global result_queue
-        global bot_interface
-
-        while not self.stopped:
-            try:
-                result = result_queue.get_nowait()
-                bot_interface.handle_tweet_result(result[0], result[1])
-                result_queue.task_done()
-            except Empty:
-                pass
+        def __restart_with_new_post(self, post):
+            self.post = post
+            self.run()

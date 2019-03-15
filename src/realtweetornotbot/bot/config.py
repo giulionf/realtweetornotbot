@@ -15,6 +15,7 @@ class Config:
     USER_AGENT = os.environ['REDDIT_USER_AGENT']
     SUBREDDITS = os.environ['REDDIT_SUBREDDITS']
     FETCH_COUNT = int(os.environ['REDDIT_FETCH_COUNT'])
+    POST_MAX_AGE_DAYS = int(os.environ['REDDIT_POST_MAX_AGE_DAYS'])
 
     # Bot Data
     CREATOR_NAME = config['BOTDATA']['creator']

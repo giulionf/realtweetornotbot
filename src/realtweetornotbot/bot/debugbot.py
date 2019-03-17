@@ -23,11 +23,25 @@ class DebugBot:
         list
             a list of praw.submissions to work off
         """
+        posts_from_mentions = self.__fetch_new_username_mentions()
+        posts_from_subs = self.__fetch_new_posts_from_featured_subs()
+        posts = list(set().union(posts_from_mentions, posts_from_subs))
+        return posts
+
+    def __fetch_new_posts_from_featured_subs(self):
         image_posts = []
         for post in self._praw_client.subreddit(Config.SUBREDDITS).hot(limit=Config.FETCH_COUNT):
             if self._is_valid_post(post):
                 image_posts.append(post)
         Logger.log_fetch_count(len(image_posts))
+        return image_posts
+
+    def __fetch_new_username_mentions(self):
+        image_posts = []
+        for comment in self._praw_client.inbox.mentions(limit=Config.SUMMON_COUNT):
+            if self._is_valid_post(comment.submission):
+                image_posts.append(comment.submission)
+        Logger.log_summon_count(len(image_posts))
         return image_posts
 
     def find_tweet(self, post):

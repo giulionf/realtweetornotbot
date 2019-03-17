@@ -10,6 +10,11 @@ class Logger:
         print("<FETCHED POSTS> {} new posts. Dispatching workers!\n".format(fetch_count))
 
     @staticmethod
+    def log_summon_count(fetch_count):
+        """ Logs the amount of comment mentions that have been fetched """
+        print("<FETCHED SUMMONS> {} new summons. Dispatching workers!\n".format(fetch_count))
+
+    @staticmethod
     def log_tweet_found(post_id, image_url):
         """ Logs that a tweet to a given post_id has been found """
         print("<WORKER-{} - FOUND TWEET>\nPost: https://www.reddit.com/{}\nTweet: {}\n"

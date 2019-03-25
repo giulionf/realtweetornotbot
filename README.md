@@ -1,24 +1,76 @@
 # RealTweetOrNotBot
-The Reddit Tweet Finder Bot
+The [Reddit](https://www.reddit.com/r/realtweetornotbot/) Tweet Finder Bot
 
-[![N|Solid](http://files.softicons.com/download/social-media-icons/flat-social-media-icons-by-uiconstock/png/128x128/reddit.png)](https://www.reddit.com/r/realtweetornotbot/)
+RealTweetOrNotBot is a Reddit Bot, that analyzes image posts in given SubReddits and - if it detects a twitter screenshot - posts a link to it in the comments. It is written in [Python3] using the following modules:
+
+| Module Name     | Description |
+| -------------   | ------------- |
+| [PRAW]          | Python Reddit API Wrapper  |
+| [Pytesseract]   | Python Tesseract Wrapper (OCR image analysis)  |
+| [GetOldTweets3]  | Python module to search for tweets  |
 
 
-RealTweetOrNotBot is a python script that analyzes a twitter screenshot to find the link to the tweets inside. It is written in [Python3] using the following modules:
+# Setup
+To function, you need the above modules installed. Use the following commands with PIP to install them:
+```sh
+pip install praw
+pip install getoldtweets3
+pip install pytesseract
+```
 
-  - [PRAW] - Python Reddit API Wrapper
-  - [Pytesseract] - Python Tesseract Wrapper (OCR image analysis)
-  - [GetOldTweets3] - Python module to search for tweets
+You also need [Tesseract] installed and working on your device.
+
+Once that's done, you need to set certain environment variables to keep sensitive information out of the code. 
+
+| Environment Variable     | Description |
+| -------------   | ------------- |
+| REDDIT_CLIENT_ID          | Reddit API Client ID  |
+| REDDIT_CLIENT_SECRET  | Reddit API Client Secret  |
+| REDDIT_USER_AGENT  | Reddit API User Agent  |
+| REDDIT_FETCH_COUNT  | Numeric Value representing how many posts are fetched with every cycle  |
+| REDDIT_SUMMON_COUNT  | Numeric value of username summons to be fetched every cycle  |
+| REDDIT_USERNAME  | Username of the Bots Reddit account  |
+| REDDIT_PASSWORD  | Password of the Bots Reddit account  |
+| REDDIT_POST_MAX_AGE_DAYS  | Numeric value of how old a fetched post can be at max  |
+| REDDIT_SUBREDDITS | Lust of subreddits joined by a + symbol e.g. "me_irl+whitepeopletwitter+meirl+2meirl4meirl"|
+| DATABASE_URL  | URL to your PostGres Database  |
+| DATABASE_USER  | User to log into the Database  |
+| DATABASE_PASSWORD  | Password to log into the Database  |
+
+
+## Database Setup
+To use the bot a database is needed. It can be a local database or a remote one specified in the Environment Variables of the Operating System. Use the following Queries to create the needed tables:
+
+```sh
+CREATE TABLE seen_posts (
+    "id" SERIAL PRIMARY KEY,
+    "post_id" VARCHAR (255),
+    "found_tweet" VARCHAR (255)
+);
+```
+
+```sh
+CREATE TABLE summary (
+    "id" SERIAL PRIMARY KEY,
+    "time" timestamp DEFAULT CURRENT_TIMESTAMP,
+    "posts_seen" integer,
+    "tweets_found" integer,
+    "last_post_id" integer
+);
+```
 
 # Running the Bot
-The bot needs [Python3] and the Libraries to run. Since this is opensource, the PRAW Secret Data as well as the login information is stored in Environment Variables which need to be set on your Operating System.
-
 The Bot is configured to be running on [Heroku] but can be run just as well on any Operating System supporting Python.
+To run the bot, use:
 
+```sh
+python src/main.py
+```
 
-[//]: # (These are reference links used in the body of this note and get stripped out when the markdown processor does its job. There is no need to format nicely because it shouldn't be seen. Thanks SO - http://stackoverflow.com/questions/4823468/store-comments-in-markdown-syntax)
+[//]: # 
 
    [Python3]: <https://www.python.org/>
    [PRAW]: <https://praw.readthedocs.io/en/latest/>
    [GetOldTweets3]: <https://github.com/Mottl/GetOldTweets3>
    [Pytesseract]: <https://github.com/madmaze/pytesseract>
+   [Tesseract]: <https://github.com/tesseract-ocr/tesseract/wiki>

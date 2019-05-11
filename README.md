@@ -1,6 +1,8 @@
 # RealTweetOrNotBot
 The [Reddit](https://www.reddit.com/r/realtweetornotbot/) Tweet Finder Bot
 
+The bot is currently (12th of May 2019) ranked as the number one bot on Reddit by the unofficial [Reddit bot Ranking](https://botrank.pastimes.eu/)! 
+
 RealTweetOrNotBot is a Reddit Bot, that analyzes image posts in given SubReddits and - if it detects a twitter screenshot - posts a link to it in the comments. It is written in [Python3] using the following modules:
 
 | Module Name     | Description |

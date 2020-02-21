@@ -31,10 +31,10 @@ Once that's done, you need to set certain environment variables to keep sensitiv
 | REDDIT_USER_AGENT  | Reddit API User Agent  |
 | REDDIT_FETCH_COUNT  | Numeric Value representing how many posts are fetched with every cycle  |
 | REDDIT_SUMMON_COUNT  | Numeric value of username summons to be fetched every cycle  |
-| REDDIT_USERNAME  | Username of the Bots Reddit account  |
-| REDDIT_PASSWORD  | Password of the Bots Reddit account  |
+| REDDIT_USERNAME  | Username of the Bot's Reddit account  |
+| REDDIT_PASSWORD  | Password of the Bot's Reddit account  |
 | REDDIT_POST_MAX_AGE_DAYS  | Numeric value of how old a fetched post can be at max  |
-| REDDIT_SUBREDDITS | Lust of subreddits joined by a + symbol e.g. "me_irl+whitepeopletwitter+meirl+2meirl4meirl"|
+| REDDIT_SUBREDDITS | List of subreddits joined by a + symbol e.g. "me_irl+whitepeopletwitter+meirl+2meirl4meirl"|
 | DATABASE_URL  | URL to your PostGres Database  |
 | DATABASE_USER  | User to log into the Database  |
 | DATABASE_PASSWORD  | Password to log into the Database  |

@@ -1,4 +1,4 @@
-from fuzzywuzzy import fuzz
+from rapidfuzz import fuzz
 from GetOldTweets3.manager import TweetCriteria, TweetManager
 from realtweetornotbot.bot.twittersearch import CriteriaBuilder, Result
 

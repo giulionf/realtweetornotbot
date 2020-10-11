@@ -32,7 +32,7 @@ class Bot(DebugBot):
         if tweets and len(tweets) > 0:
             response = DebugBot._form_comment_response(tweets)
             self.__try_repeatedly_with_timeout(lambda: self.__reply_to_post(post, response))
-            db.add_submission_to_seen(post.id, tweets[0].tweet.permalink)
+            db.add_submission_to_seen(post.id, tweets[0].tweet.url)
         else:
             db.add_submission_to_seen(post.id)
 

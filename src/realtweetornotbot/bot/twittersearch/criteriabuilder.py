@@ -23,7 +23,7 @@ class CriteriaBuilder:
             return []
 
         if len(found_dates) == 0:
-            found_dates.append("")
+            found_dates.append(None)
 
         for user in found_users:
             for date in found_dates:

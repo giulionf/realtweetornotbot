@@ -79,7 +79,7 @@ class DebugBot:
             results for the given post
         """
         if tweets and len(tweets) > 0:
-            Logger.log_tweet_found(post.id, tweets[0].tweet.permalink)
+            Logger.log_tweet_found(post.id, tweets[0].tweet.url)
         else:
             Logger.log_no_results(post.id, post.url)
 
@@ -98,5 +98,5 @@ class DebugBot:
 
     @staticmethod
     def _create_single_link_to_tweet(index, search_result):
-        return Config.SINGLE_TWEET.format(index + 1, search_result.tweet.username, search_result.score,
-                                          search_result.tweet.permalink) + "\n"
+        return Config.SINGLE_TWEET.format(index + 1, search_result.tweet.user, search_result.score,
+                                          search_result.tweet.url) + "\n"

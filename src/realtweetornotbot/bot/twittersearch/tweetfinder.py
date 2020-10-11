@@ -1,6 +1,7 @@
 from rapidfuzz import fuzz
-from GetOldTweets3.manager import TweetCriteria, TweetManager
 from realtweetornotbot.bot.twittersearch import CriteriaBuilder, Result
+import snscrape.modules.twitter as sntwitter
+from snscrape.base import  ScraperException
 
 TWEET_MAX_AMOUNT = 50000    # Limit for Tweet crawling
 MAX_RETRIES = 5             # Limit for retries of Tweet Crawling when 0 was returned as result length
@@ -53,36 +54,24 @@ class TweetFinder:
         return unique_results
 
     @staticmethod
-    def __get_tweet_for_search_criteria(search_criteria):
-        got3_criteria = TweetCriteria().setMaxTweets(TWEET_MAX_AMOUNT)
-        if search_criteria.date:
-            got3_criteria\
-                .setSince(search_criteria.format_from_date())\
-                .setUntil(search_criteria.format_to_date())
-        if search_criteria.user:
-            got3_criteria.setUsername(search_criteria.user)
-        if search_criteria.content:
-            got3_criteria.setQuerySearch(search_criteria.format_content_to_or_query())
-
+    def __get_tweet_for_search_criteria(criteria):
         try:
-            tweets = TweetManager.getTweets(got3_criteria)
-        except Exception as e:
-            print("Could not get tweets: " + str(e))
-            tweets = []
+            tweets = sntwitter.TwitterSearchScraper(criteria.to_query()).get_items()
+            sorted_tweets_by_similarity = sorted(tweets,
+                                   reverse=True,
+                                   key=lambda x: TweetFinder.__score_result(x, criteria))
 
-        sorted_tweets = sorted(tweets,
-                               reverse=True,
-                               key=lambda x: TweetFinder.__score_result(x, search_criteria))
-
-        if len(sorted_tweets) > 0:
-            tweet = sorted_tweets[0]
-            score = TweetFinder.__score_result(tweet, search_criteria)
-            if score >= MIN_SCORE:
-                return Result(search_criteria, tweet, score)
+            if len(sorted_tweets_by_similarity) > 0:
+                best_matching_tweet = sorted_tweets_by_similarity[0]
+                score = TweetFinder.__score_result(best_matching_tweet, criteria)
+                if score >= MIN_SCORE:
+                    return Result(criteria, best_matching_tweet, score)
+        except ScraperException:
+            return None
 
         return None
 
     @staticmethod
     def __score_result(tweet, search_criteria):
-        score = fuzz.token_sort_ratio(tweet.text, search_criteria.content)
+        score = fuzz.token_sort_ratio(tweet.content, search_criteria.content)
         return score

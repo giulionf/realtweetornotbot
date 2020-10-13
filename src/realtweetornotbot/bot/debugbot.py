@@ -32,7 +32,7 @@ class DebugBot:
 
     def __fetch_new_posts_from_featured_subs(self):
         image_posts = []
-        for post in self._praw_client.subreddit(Config.SUBREDDITS).hot(limit=Config.FETCH_COUNT):
+        for post in self._praw_client.subreddit(Config.SUBREDDITS).rising(limit=Config.FETCH_COUNT):
             if self._is_valid_post(post):
                 image_posts.append(Job(Job.JobType.POST, post))
         Logger.log_fetch_count(len(image_posts))

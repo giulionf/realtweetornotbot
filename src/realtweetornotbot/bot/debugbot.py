@@ -1,6 +1,6 @@
 import praw
 from datetime import datetime, timedelta
-from realtweetornotbot.bot import Config
+from realtweetornotbot.bot import Config, Job
 from realtweetornotbot.bot.twittersearch import TweetFinder
 from realtweetornotbot.utils import Logger, UrlUtils
 
@@ -15,8 +15,10 @@ class DebugBot:
                                         username=Config.USERNAME,
                                         password=Config.PASSWORD)
 
-    def fetch_new_posts(self):
-        """ Fetches new posts to work off
+    def fetch_new_jobs(self):
+        """ Fetches new jobs to work off. Jobs might be of type:
+            - comment (a summon of another user by comment)
+            - post (an image post)
 
         Returns
         -------
@@ -32,7 +34,7 @@ class DebugBot:
         image_posts = []
         for post in self._praw_client.subreddit(Config.SUBREDDITS).hot(limit=Config.FETCH_COUNT):
             if self._is_valid_post(post):
-                image_posts.append(post)
+                image_posts.append(Job(Job.JobType.POST, post))
         Logger.log_fetch_count(len(image_posts))
         return image_posts
 
@@ -40,24 +42,23 @@ class DebugBot:
         image_posts = []
         for comment in self._praw_client.inbox.mentions(limit=Config.SUMMON_COUNT):
             if self._is_valid_post(comment.submission):
-                image_posts.append(comment.submission)
+                image_posts.append(Job(Job.JobType.COMMENT, comment))
         Logger.log_summon_count(len(image_posts))
         return image_posts
 
-    def find_tweet(self, post):
-        """ Finds a tweet for a given post
+    def find_tweet(self, job):
+        """ Finds a tweet for a given job
 
         Parameters
         ----------
-        post : praw.submission
-            The post to find tweets in
+        job : Job
 
         Returns
         -------
         list
-            a list of twittersearch.result for the post
+            a list of twittersearch.result for the job
         """
-        url = post.url
+        url = job.get_post().url
 
         if UrlUtils.is_image_url(url):
             criteria = TweetFinder.build_criteria_for_image(url)
@@ -68,16 +69,17 @@ class DebugBot:
 
         return TweetFinder.find_tweets(criteria)
 
-    def handle_tweet_result(self, post, tweets):
-        """ Implements the actions made on new results
+    def handle_tweet_result(self, job, tweets):
+        """ Implements the actions made on new results on a job
 
         Parameters
         ----------
-        post : praw.submission
-            The post the result was found for
+        job : Job
+
         tweets : list
             results for the given post
         """
+        post = job.get_post()
         if tweets and len(tweets) > 0:
             Logger.log_tweet_found(post.id, tweets[0].tweet.url)
         else:
@@ -98,5 +100,5 @@ class DebugBot:
 
     @staticmethod
     def _create_single_link_to_tweet(index, search_result):
-        return Config.SINGLE_TWEET.format(index + 1, search_result.tweet.user, search_result.score,
+        return Config.SINGLE_TWEET.format(index + 1, search_result.tweet.username, search_result.score,
                                           search_result.tweet.url) + "\n"

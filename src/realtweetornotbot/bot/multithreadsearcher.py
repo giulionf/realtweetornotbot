@@ -11,13 +11,13 @@ class MultiThreadSearcher:
 
     def __init__(self, bot):
         self.bot = bot
-        self.post_queue = []
+        self.job_queue = []
         self.workers = []
 
     def schedule(self):
         """ Fetches new posts. Uses the already running workers or starts new ones if needed """
-        self.__get_new_posts()
-        additional_workers_needed = min(WORKER_THREAD_LIMIT, len(self.post_queue)) - len(self.workers)
+        self.__get_new_jobs()
+        additional_workers_needed = min(WORKER_THREAD_LIMIT, len(self.job_queue)) - len(self.workers)
         if additional_workers_needed > 0:
             for i in range(0, additional_workers_needed):
                 self.__create_new_worker()
@@ -27,46 +27,46 @@ class MultiThreadSearcher:
         self.workers.remove(worker)
         print("Removed Workers, {} workers left".format(len(self.workers)))
 
-    def pop_next_post(self):
+    def pop_next_job(self):
         """ Pops the next post out of the post queue """
         pop_lock.acquire()
-        if len(self.post_queue) > 0:
-            post = self.post_queue[0]
-            self.post_queue.remove(post)
+        if len(self.job_queue) > 0:
+            job = self.job_queue[0]
+            self.job_queue.remove(job)
         else:
-            post = None
+            job = None
         pop_lock.release()
-        return post
+        return job
 
-    def __get_new_posts(self):
-        new_posts = self.bot.fetch_new_posts()
-        self.post_queue.extend(new_posts)
+    def __get_new_jobs(self):
+        new_jobs = self.bot.fetch_new_jobs()
+        self.job_queue.extend(new_jobs)
 
     def __create_new_worker(self):
-        assigned_post = self.pop_next_post()
-        worker = MultiThreadSearcher.Worker(assigned_post, self, self.bot)
+        assigned_job = self.pop_next_job()
+        worker = MultiThreadSearcher.Worker(assigned_job, self, self.bot)
         self.workers.append(worker)
         worker.start()
 
     class Worker(Thread):
         """ Worker Thread for a post. Once it's done, it will reschedule itself with a new post or terminate """
 
-        def __init__(self, post, scheduler, bot):
+        def __init__(self, job, scheduler, bot):
             super().__init__()
-            self.post = post
+            self.job = job
             self.scheduler = scheduler
             self.bot = deepcopy(bot)
 
         def run(self) -> None:
-            tweets = self.bot.find_tweet(self.post)
-            self.bot.handle_tweet_result(self.post, tweets)
+            tweets = self.bot.find_tweet(self.job)
+            self.bot.handle_tweet_result(self.job, tweets)
 
-            next_post = self.scheduler.pop_next_post()
-            if next_post is not None:
-                self.__restart_with_new_post(next_post)
+            next_job = self.scheduler.pop_next_job()
+            if next_job is not None:
+                self.__restart_with_new_job(next_job)
             else:
                 self.scheduler.remove_worker(self)
 
-        def __restart_with_new_post(self, post):
-            self.post = post
+        def __restart_with_new_job(self, job):
+            self.job = job
             self.run()

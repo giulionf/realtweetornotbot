@@ -21,17 +21,18 @@ class Bot(DebugBot):
     def __init__(self):
         DebugBot.__init__(self)
 
-    def fetch_new_posts(self):
-        image_posts = super().fetch_new_posts()
-        db.delete_old_entries_if_db_full(len(image_posts))
+    def fetch_new_jobs(self):
+        jobs = super().fetch_new_jobs()
+        db.delete_old_entries_if_db_full(len(jobs))
         self.__update_database_summary()
-        return image_posts
+        return jobs
 
-    def handle_tweet_result(self, post, tweets):
-        super().handle_tweet_result(post, tweets)
+    def handle_tweet_result(self, job, tweets):
+        super().handle_tweet_result(job, tweets)
+        post = job.get_post()
         if tweets and len(tweets) > 0:
             response = DebugBot._form_comment_response(tweets)
-            self.__try_repeatedly_with_timeout(lambda: self.__reply_to_post(post, response))
+            self.__try_repeatedly_with_timeout(lambda: self.__reply_to_job(job, response))
             db.add_submission_to_seen(post.id, tweets[0].tweet.url)
         else:
             db.add_submission_to_seen(post.id)
@@ -83,8 +84,9 @@ class Bot(DebugBot):
     def _is_valid_post(self, post):
         return super()._is_valid_post(post) and not db.is_submission_already_seen(post.id)
 
-    def __reply_to_post(self, post, text):
+    def __reply_to_job(self, job, text):
+        post = job.get_post()
         if self._is_valid_post(post):
             praw_lock.acquire()
-            post.reply(text)
+            job.instance.reply(text)  # This works for all Job Types
             praw_lock.release()

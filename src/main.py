@@ -1,5 +1,7 @@
 from realtweetornotbot import Bot, MultiThreadSearcher
 
+from src.realtweetornotbot import DebugBot
+
 
 def main():
     print("Starting Bot\n")

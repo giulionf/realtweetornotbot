@@ -38,7 +38,7 @@ class Criteria:
             return ""
 
     def format_content(self):
-        """ Returns the content of the tweet seperated by 'OR' operators"""
+        """ Returns the content of the tweet separated by 'OR' operators"""
         return " OR ".join(self.content.split())
 
     def to_query(self):

@@ -81,7 +81,7 @@ class DebugBot:
         """
         post = job.get_post()
         if tweets and len(tweets) > 0:
-            Logger.log_tweet_found(post.id, tweets[0].tweet.url)
+            Logger.log_tweet_found(post.id, tweets[0].tweet.link)
         else:
             Logger.log_no_results(post.id, post.url)
 

@@ -3,7 +3,8 @@ The [Reddit](https://www.reddit.com/r/realtweetornotbot/) Tweet Finder Bot
 
 The bot is currently (13th of December 2019) ranked as the number one bot on Reddit by the unofficial [Reddit bot Ranking](https://botrank.pastimes.eu/)! 
 
-RealTweetOrNotBot is a Reddit Bot, that analyzes image posts in given SubReddits and - if it detects a twitter screenshot - posts a link to it in the comments. It is written in [Python3] using [Tesseract](https://github.com/tesseract-ocr/tesseract)
+RealTweetOrNotBot is a Reddit Bot, that analyzes image posts in given SubReddits and - if it detects a twitter
+ screenshot - posts a link to it in the comments. It is written in [Python3].
 
 # Setup
 To function you need to install the required modules from the requirements.txt using:
@@ -11,7 +12,6 @@ To function you need to install the required modules from the requirements.txt u
 pip install requirements.txt
 ```
 
-You also need [Tesseract] installed and working on your device.
 
 Once that's done, you need to set certain environment variables to keep sensitive information out of the code. 
 
@@ -65,5 +65,3 @@ python src/main.py
    [Python3]: <https://www.python.org/>
    [PRAW]: <https://praw.readthedocs.io/en/latest/>
    [GetOldTweets3]: <https://github.com/Mottl/GetOldTweets3>
-   [Pytesseract]: <https://github.com/madmaze/pytesseract>
-   [Tesseract]: <https://github.com/tesseract-ocr/tesseract/wiki>

@@ -1,14 +1,14 @@
+easyocr
 beautifulsoup4==4.9.3
 certifi==2020.6.20
 chardet==3.0.4
 idna==2.10
 lxml==4.5.2
 Pillow==8.1.1
-praw==7.1.0
+praw==7.2.0
 prawcore==1.5.0
 psycopg2==2.8.6
 PySocks==1.7.1
-pytesseract==0.3.6
 rapidfuzz==0.12.3
 requests==2.24.0
 six==1.15.0

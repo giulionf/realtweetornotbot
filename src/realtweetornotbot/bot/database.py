@@ -25,8 +25,7 @@ class Database:
     def is_submission_already_seen(self, submission_id):
         """ Returns true, if the submission_id has already been visited before """
         self.__cursor.execute("""SELECT * FROM seen_posts WHERE post_id = %s""", (submission_id,))
-        result = self.__cursor.fetchall()
-        return len(result) > 0
+        return self.__cursor.rowcount > 0
 
     def delete_old_entries_if_db_full(self, new_entries_count):
         """ Makes space in the database if the new post addition would overstep the total row limit """

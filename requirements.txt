@@ -14,6 +14,6 @@ requests==2.25.1
 six==1.15.0
 soupsieve==2.2.1
 update-checker==0.18.0
-urllib3==1.26.4
+urllib3==1.26.5
 websocket-client==0.58.0
 -e git+https://github.com/twintproject/twint#egg=twint

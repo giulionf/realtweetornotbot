@@ -17,6 +17,7 @@ class Config:
     FETCH_COUNT = int(os.environ['REDDIT_FETCH_COUNT'])
     SUMMON_COUNT = int(os.environ['REDDIT_SUMMON_COUNT'])
     POST_MAX_AGE_DAYS = int(os.environ['REDDIT_POST_MAX_AGE_DAYS'])
+    WORKER_COUNT = int(os.environ['WORKER_COUNT'])
 
     # Bot Data
     CREATOR_NAME = config['BOTDATA']['creator']
@@ -37,3 +38,8 @@ class Config:
     DATABASE_MAX_POSTS = 9000
     DATABASE_MAX_SUMMARIES = 100
     DATABASE_SUMMARY_INTERVAL_HOURS = 24
+
+    # Twitter API
+    SEARCHTWEETS_ENDPOINT = os.environ['SEARCHTWEETS_ENDPOINT']
+    SEARCHTWEETS_BEARER_TOKEN = os.environ['SEARCHTWEETS_BEARER_TOKEN']
+    TWITTER_API_MAX_AGE_DAYS = int(os.environ['TWITTER_API_MAX_AGE_DAYS'])

@@ -1,7 +1,6 @@
 from copy import deepcopy
 from threading import Thread, Lock
-
-WORKER_THREAD_LIMIT = 20  # Limit for the number of concurrently running worker threads
+from realtweetornotbot.bot import Config
 
 pop_lock = Lock()  # Lock for popping the top of the post_queue
 
@@ -17,7 +16,7 @@ class MultiThreadSearcher:
     def schedule(self):
         """ Fetches new posts. Uses the already running workers or starts new ones if needed """
         self.__get_new_jobs()
-        additional_workers_needed = min(WORKER_THREAD_LIMIT, len(self.job_queue)) - len(self.workers)
+        additional_workers_needed = min(Config.WORKER_COUNT, len(self.job_queue)) - len(self.workers)
         if additional_workers_needed > 0:
             for i in range(0, additional_workers_needed):
                 self.__create_new_worker()

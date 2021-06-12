@@ -33,7 +33,7 @@ class Bot(DebugBot):
         if tweets and len(tweets) > 0:
             response = DebugBot._form_comment_response(tweets)
             self.__try_repeatedly_with_timeout(lambda: self.__reply_to_job(job, response))
-            db.add_submission_to_seen(post.id, tweets[0].tweet.url)
+            db.add_submission_to_seen(post.id, "https://twitter.com/r/status/{}".format(tweets[0].tweet['id']))
         else:
             db.add_submission_to_seen(post.id)
 

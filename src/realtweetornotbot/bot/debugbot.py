@@ -81,7 +81,7 @@ class DebugBot:
         """
         post = job.get_post()
         if tweets and len(tweets) > 0:
-            Logger.log_tweet_found(post.id, tweets[0].tweet.link)
+            Logger.log_tweet_found(post.id, "https://twitter.com/r/status/{}".format(tweets[0].tweet['id']))
         else:
             Logger.log_no_results(post.id, post.url)
 
@@ -100,5 +100,5 @@ class DebugBot:
 
     @staticmethod
     def _create_single_link_to_tweet(index, search_result):
-        return Config.SINGLE_TWEET.format(index + 1, search_result.tweet.username, search_result.score,
-                                          search_result.tweet.url) + "\n"
+        return Config.SINGLE_TWEET.format(index + 1, search_result.score,
+                                          "https://twitter.com/r/status/{}".format(search_result.tweet['id'])) + "\n"

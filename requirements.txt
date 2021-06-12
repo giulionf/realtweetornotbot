@@ -40,7 +40,6 @@ searchtweets-v2==1.0.7
 six==1.15.0
 soupsieve==2.2.1
 tweet-parser==1.13.2
--e git+https://github.com/twintproject/twint@69e32fdae7968b56877fb7c79943f06ed2dd93ef#egg=twint
 typing-extensions==3.7.4.3
 update-checker==0.18.0
 urllib3==1.26.5

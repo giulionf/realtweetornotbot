@@ -1,1 +1,1 @@
-from .bot import MultiThreadSearcher, Bot, DebugBot
+from .bot import Bot, DebugBot

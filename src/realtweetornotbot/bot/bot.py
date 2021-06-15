@@ -4,8 +4,9 @@ import traceback
 from datetime import timedelta
 from praw import exceptions
 from threading import Lock
-from realtweetornotbot.bot import Config, Database, DebugBot
+from realtweetornotbot.bot import Config, DebugBot
 from realtweetornotbot.utils import Logger
+from realtweetornotbot.persistance.database import Database
 
 ATTEMPT_TIMEOUT = 30
 MAX_TIMEOUT = 11 * 60
@@ -27,13 +28,14 @@ class Bot(DebugBot):
         self.__update_database_summary()
         return jobs
 
-    def handle_tweet_result(self, job, tweets):
-        super().handle_tweet_result(job, tweets)
+    def handle_tweet_result(self, job, search_results):
+        super().handle_tweet_result(job, search_results)
         post = job.get_post()
-        if tweets and len(tweets) > 0:
-            response = DebugBot._form_comment_response(tweets)
+
+        if search_results and len(search_results) > 0:
+            response = DebugBot._form_comment_response(search_results)
             self.__try_repeatedly_with_timeout(lambda: self.__reply_to_job(job, response))
-            db.add_submission_to_seen(post.id, "https://twitter.com/r/status/{}".format(tweets[0].tweet['id']))
+            db.add_submission_to_seen(post.id, search_results[0].tweet.url)
         else:
             db.add_submission_to_seen(post.id)
 

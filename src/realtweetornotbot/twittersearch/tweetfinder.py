@@ -1,7 +1,9 @@
 from rapidfuzz import fuzz
 import datetime as dt
-from realtweetornotbot.bot.twittersearch import CriteriaBuilder, Result
+from realtweetornotbot.twittersearch import CriteriaBuilder, SearchResult
 from realtweetornotbot.bot import Config
+from realtweetornotbot.twittersearch import SearchResult
+from realtweetornotbot.twittersearch.tweet import Tweet
 from searchtweets import load_credentials, collect_results, gen_request_parameters
 
 TWEET_MAX_AMOUNT = 250000  # Limit for Tweet crawling
@@ -19,7 +21,7 @@ class TweetFinder:
 
     @staticmethod
     def find_tweets(criteria_candidates):
-        """ Returns a list of twittersearch.result with the given search results for each candidate
+        """ Returns a list of SearchResult with the given search results for each candidate
 
         Parameters
         ----------
@@ -49,9 +51,9 @@ class TweetFinder:
         unique_results = []
         unique_ids = []
         for result in results:
-            if result.tweet['id'] not in unique_ids:
+            if result.tweet.id not in unique_ids:
                 unique_results.append(result)
-                unique_ids.append(result.tweet['id'])
+                unique_ids.append(result.tweet.id)
         return unique_results
 
     @staticmethod
@@ -59,22 +61,21 @@ class TweetFinder:
         """ Gets the best tweet for a given search criteria """
 
         # Limit search to last n days + only search when a username is found
-        if criteria.user == "" or (dt.date.today() - criteria.from_date()).days > Config.TWITTER_API_MAX_AGE_DAYS:
+        if criteria.user == "" or (dt.date.today() - criteria.from_date()).days >= Config.TWITTER_API_MAX_AGE_DAYS:
             return None
 
         # Search tweets with the Twitter API
         search_args = load_credentials(filename="", yaml_key="", env_overwrite=True)
-        query = gen_request_parameters(query=criteria.to_query(), results_per_call=500,
-                                       start_time=criteria.format_from_date(), end_time=criteria.format_to_date())
-        tweets = collect_results(query,
-                                 max_tweets=100,
-                                 result_stream_args=search_args)
+        query = gen_request_parameters(query=criteria.to_query(), results_per_call=100)
+        api_result = collect_results(query,
+                                     max_tweets=100,
+                                     result_stream_args=search_args)
 
-        # The result list's last item is a summary that can be omitted
-        if len(tweets) > 0:
-            tweets = tweets[:-1]
+        # We can omit the summary item
+        api_result = [i for i in api_result if "newest_id" not in i]
 
-        # If we found something, make sure we sort by the matching score descending
+        # Buffer into SearchResult objects that are then scored by the Similarity distance
+        tweets = [Tweet(criteria=criteria, api_tweet=tweet) for tweet in api_result]
         sorted_tweets_by_similarity = sorted(tweets,
                                              reverse=True,
                                              key=lambda x: TweetFinder.__score_result(x, criteria))
@@ -88,12 +89,12 @@ class TweetFinder:
             # We will only return the result, if it is bigger than a certain minimum score. This needs to be
             # fine tuned to compensate for slight errors in OCR that still find the correct tweet.
             if score >= MIN_SCORE:
-                return Result(criteria, best_matching_tweet, score)
+                return SearchResult(criteria, best_matching_tweet, score)
 
         return None
 
     @staticmethod
     def __score_result(tweet, search_criteria):
         """ Score the tweet by measuring how similar the OCR text is to the tweets content """
-        score = fuzz.token_sort_ratio(tweet['text'], search_criteria.content)
+        score = fuzz.token_sort_ratio(tweet.content, search_criteria.content)
         return score

@@ -29,6 +29,10 @@ Once that's done, you need to set certain environment variables to keep sensitiv
 | DATABASE_URL  | URL to your PostGres Database  |
 | DATABASE_USER  | User to log into the Database  |
 | DATABASE_PASSWORD  | Password to log into the Database  |
+| SEARCHTWEETS_BEARER_TOKEN  | Twitter API Bearer Token  |
+| SEARCHTWEETS_ENDPOINT  | Endpoint used for searching tweets on the Twitter API  |
+| WORKER_COUNT  | Amount of worker threads to process a request simultaneously  |
+| TWITTER_API_MAX_AGE_DAYS  | Max age of tweets to process - 7 is the limit for free tier of Twitter API  |
 
 
 ## Database Setup
@@ -64,4 +68,3 @@ python src/main.py
 
    [Python3]: <https://www.python.org/>
    [PRAW]: <https://praw.readthedocs.io/en/latest/>
-   [GetOldTweets3]: <https://github.com/Mottl/GetOldTweets3>

@@ -1,4 +1,5 @@
-from realtweetornotbot import DebugBot, MultiThreadSearcher
+from realtweetornotbot import DebugBot
+from realtweetornotbot.multithreading import MultiThreadSearcher
 
 
 def main():

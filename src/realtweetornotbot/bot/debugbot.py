@@ -1,8 +1,9 @@
 import praw
 from datetime import datetime, timedelta
-from realtweetornotbot.bot import Config, Job
-from realtweetornotbot.bot.twittersearch import TweetFinder
+from realtweetornotbot.twittersearch import TweetFinder
 from realtweetornotbot.utils import Logger, UrlUtils
+from realtweetornotbot.bot import Config
+from realtweetornotbot.multithreading.job import Job
 
 
 class DebugBot:
@@ -69,19 +70,19 @@ class DebugBot:
 
         return TweetFinder.find_tweets(criteria)
 
-    def handle_tweet_result(self, job, tweets):
+    def handle_tweet_result(self, job, search_results):
         """ Implements the actions made on new results on a job
 
         Parameters
         ----------
         job : Job
 
-        tweets : list
+        search_results : list
             results for the given post
         """
         post = job.get_post()
-        if tweets and len(tweets) > 0:
-            Logger.log_tweet_found(post.id, "https://twitter.com/r/status/{}".format(tweets[0].tweet['id']))
+        if search_results and len(search_results) > 0:
+            Logger.log_tweet_found(post.id, search_results[0].tweet.url)
         else:
             Logger.log_no_results(post.id, post.url)
 
@@ -100,5 +101,4 @@ class DebugBot:
 
     @staticmethod
     def _create_single_link_to_tweet(index, search_result):
-        return Config.SINGLE_TWEET.format(index + 1, search_result.score,
-                                          "https://twitter.com/r/status/{}".format(search_result.tweet['id'])) + "\n"
+        return Config.SINGLE_TWEET.format(index + 1, search_result.score, search_result.tweet.url) + "\n"

@@ -57,8 +57,8 @@ class MultiThreadSearcher:
             self.bot = deepcopy(bot)
 
         def run(self) -> None:
-            tweets = self.bot.find_tweet(self.job)
-            self.bot.handle_tweet_result(self.job, tweets)
+            search_results = self.bot.find_tweet(self.job)
+            self.bot.handle_tweet_result(self.job, search_results)
 
             next_job = self.scheduler.pop_next_job()
             if next_job is not None:

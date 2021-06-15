@@ -1,4 +1,4 @@
-class Result:
+class SearchResult:
     """ Model for a search result """
 
     def __init__(self, criteria, tweet, score):

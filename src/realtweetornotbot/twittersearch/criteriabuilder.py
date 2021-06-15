@@ -1,5 +1,5 @@
-from realtweetornotbot.bot.twittersearch.analyse import ContentProcessor, DateProcessor, ImageProcessor, UserProcessor
-from realtweetornotbot.bot.twittersearch import Criteria
+from realtweetornotbot.ocranalysis import ContentProcessor, DateProcessor, ImageProcessor, UserProcessor
+from realtweetornotbot.twittersearch import Criteria
 
 
 class CriteriaBuilder:

@@ -1,3 +1,8 @@
 build:
   docker:
     worker: Dockerfile
+run:
+  worker:
+    command:
+      - python3 src/main.py
+    image: worker

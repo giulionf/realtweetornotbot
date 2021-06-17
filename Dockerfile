@@ -19,5 +19,3 @@ RUN . $VIRTUAL_ENV/bin/activate && pip install --upgrade pip && pip install -r r
 
 # Load the Code
 COPY ./src .
-
-ENTRYPOINT ["python3", "src/main.py"]

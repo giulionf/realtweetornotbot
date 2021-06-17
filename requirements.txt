@@ -1,7 +1,7 @@
 Pillow==8.2.0
 praw==7.2.0
 prawcore==2.0.0
-psycopg2==2.8.6
+psycopg2-binary==2.8.6
 pytesseract==0.3.7
 rapidfuzz==1.4.1
 searchtweets-v2==1.0.7

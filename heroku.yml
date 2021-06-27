@@ -4,5 +4,5 @@ build:
 run:
   worker:
     command:
-      - python3 src/main.py
+      - ./opt/venv/python src/main.py
     image: worker

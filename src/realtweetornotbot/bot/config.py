@@ -18,6 +18,7 @@ class Config:
     SUMMON_COUNT = int(os.environ['REDDIT_SUMMON_COUNT'])
     POST_MAX_AGE_DAYS = int(os.environ['REDDIT_POST_MAX_AGE_DAYS'])
     WORKER_COUNT = int(os.environ['WORKER_COUNT'])
+    RUN_MODE = os.environ['RUN_MODE']
 
     # Bot Data
     CREATOR_NAME = config['BOTDATA']['creator']

@@ -1,6 +1,8 @@
 FROM python:3.7-slim-buster
 
-ENV VIRTUAL_ENV=./opt/venv
+ENV VIRTUAL_ENV=/opt/venv
+RUN python3 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # Install tesseract and pip
 RUN apt-get update -y
@@ -12,10 +14,10 @@ RUN apt-get -y install tesseract-ocr
 COPY . /realtweetornotbot
 WORKDIR /realtweetornotbot
 
-# Install requirements in a venv
-RUN python3 -m venv $VIRTUAL_ENV
+# Install requirements
 COPY requirements.txt .
-RUN . $VIRTUAL_ENV/bin/activate && pip install --upgrade pip && pip install -r requirements.txt
+RUN pip install --upgrade pip &&\
+    pip install -r requirements.txt
 
-# Load the Code
 COPY ./src .
+CMD ["python", "src/main.py"]

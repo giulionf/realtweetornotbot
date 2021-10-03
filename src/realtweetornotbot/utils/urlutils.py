@@ -14,7 +14,10 @@ class UrlUtils:
     @staticmethod
     def is_image_url(url):
         """ Returns true if the url is to an image file """
-        r = requests.head(url)
-        if r.headers.get("content-type") in IMAGE_FORMATS:
-            return True
+        try:
+            r = requests.head(url)
+            if r.headers.get("content-type") in IMAGE_FORMATS:
+                return True
+        except requests.exceptions.MissingSchema:
+            print("Missing Schema Exception")
         return False

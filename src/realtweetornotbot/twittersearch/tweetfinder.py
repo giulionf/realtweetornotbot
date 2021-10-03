@@ -1,3 +1,4 @@
+import requests
 from rapidfuzz import fuzz
 import datetime as dt
 from realtweetornotbot.twittersearch import CriteriaBuilder, SearchResult
@@ -67,9 +68,13 @@ class TweetFinder:
         # Search tweets with the Twitter API
         search_args = load_credentials(filename="", yaml_key="", env_overwrite=True)
         query = gen_request_parameters(query=criteria.to_query(), results_per_call=100)
-        api_result = collect_results(query,
-                                     max_tweets=100,
-                                     result_stream_args=search_args)
+        try:
+            api_result = collect_results(query,
+                                         max_tweets=100,
+                                         result_stream_args=search_args)
+        except requests.exceptions.HTTPError:
+            print("HTTP Error!")
+
 
         # We can omit the summary item
         api_result = [i for i in api_result if "newest_id" not in i]

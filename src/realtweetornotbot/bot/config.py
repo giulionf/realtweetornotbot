@@ -19,6 +19,7 @@ class Config:
     POST_MAX_AGE_DAYS = int(os.environ['REDDIT_POST_MAX_AGE_DAYS'])
     WORKER_COUNT = int(os.environ['WORKER_COUNT'])
     RUN_MODE = os.environ['RUN_MODE']
+    RUN_INFINITELY = int(os.getenv('RUN_INFINITELY', "1"))
 
     # Bot Data
     CREATOR_NAME = config['BOTDATA']['creator']

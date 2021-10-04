@@ -34,6 +34,7 @@ Once that's done, you need to set certain environment variables to keep sensitiv
 | WORKER_COUNT  | Amount of worker threads to process a request simultaneously  |
 | TWITTER_API_MAX_AGE_DAYS  | Max age of tweets to process - 7 is the limit for free tier of Twitter API  |
 | RUN_MODE  | 'release' or 'debug', depending on which way to run the bot.  |
+| RUN_INFINITELY  | 1 if run in infinite loop or 0 if only running one routine |
 
 
 ## Database Setup

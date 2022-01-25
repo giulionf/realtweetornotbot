@@ -1,4 +1,4 @@
-Pillow==8.3.2
+Pillow>=9.0.0
 praw==7.2.0
 prawcore==2.0.0
 psycopg2-binary==2.8.6

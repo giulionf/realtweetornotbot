@@ -9,7 +9,7 @@ from realtweetornotbot.utils import Logger, UrlUtils
 from realtweetornotbot.bot import Config
 from src.realtweetornotbot.bot.job import BaseJob, CommentJob, PostJob
 from src.realtweetornotbot.twittersearch.searchresult import SearchResult, TweetCandidate
-from realtweetornotbot.persistance.database import Database
+from realtweetornotbot.persistance.base import Database
 
 ATTEMPT_TIMEOUT = 30
 MAX_TIMEOUT = 11 * 60
@@ -29,26 +29,10 @@ class Bot:
         mentions = self.__fetch_bot_username_mentions()
         posts = self.__fetch_posts_from_featured_subs()
         all_jobs = mentions + posts
-        self.db.delete_old_entries_if_db_full(len(all_jobs))
-        self.__update_database_summary()
+        all_jobs = self.__filter_by_age(all_jobs)
+        all_jobs = self.db.filter_unique_novel_jobs(all_jobs)
         return all_jobs
-
-    def __fetch_posts_from_featured_subs(self) -> List[PostJob]:
-        posts = []
-        for post in self._api.subreddit(Config.SUBREDDITS).rising(limit=Config.FETCH_COUNT):
-            if self.__is_valid_post(post):
-                posts.append(PostJob(post=post))
-        Logger.log_fetch_count(len(posts))
-        return posts
-
-    def __fetch_bot_username_mentions(self) -> List[CommentJob]:
-        posts = []
-        for comment in self._praw_client.inbox.mentions(limit=Config.SUMMON_COUNT):
-            if self.__is_valid_post(comment.submission):
-                posts.append(CommentJob(comment=comment))
-        Logger.log_summon_count(len(posts))
-        return posts
-
+    
     def find_tweets(self, job: BaseJob) -> List[TweetCandidate]:
         url = job.get_post().url
 
@@ -61,24 +45,39 @@ class Bot:
 
         return TweetFinder.find_tweets(criteria)
     
-    def __is_valid_post(self, post):
-        creation_date = datetime.fromtimestamp(post.created)
-        post_age = datetime.now() - creation_date
-        is_recent_post = post_age > timedelta(days=Config.POST_MAX_AGE_DAYS)
-        is_unknown_post = self.db.is_submission_already_seen(post.id)
-        return post.url is not None and is_recent_post and is_unknown_post
-
     def handle_results(self, job: BaseJob, candidates: List[TweetCandidate]) -> None:
         post = job.get_post()
         if len(candidates) > 0:
             response = self.__form_comment_response(candidates)
             self.__try_until_timeout(lambda: self.__reply_to_job(job, response))
             Logger.log_tweet_found(post.id, candidates[0].tweet.url)
-            self.db.add_submission_to_seen(post.id, candidates[0].tweet.url)
         else:
             Logger.log_no_results(post.id, post.url)
-            self.db.add_submission_to_seen(post.id)
-            
+        self.db.on_job_done(job, candidates)
+
+    def __fetch_posts_from_featured_subs(self) -> List[PostJob]:
+        posts = []
+        for post in self._api.subreddit(Config.SUBREDDITS).rising(limit=Config.FETCH_COUNT):
+            posts.append(PostJob(post=post))
+        Logger.log_fetch_count(len(posts))
+        return posts
+
+    def __fetch_bot_username_mentions(self) -> List[CommentJob]:
+        posts = []
+        for comment in self._praw_client.inbox.mentions(limit=Config.SUMMON_COUNT):
+            posts.append(CommentJob(comment=comment))
+        Logger.log_summon_count(len(posts))
+        return posts
+    
+    def __filter_by_age(self, jobs: List[BaseJob]) -> List[BaseJob]:
+        filtered_jobs = []
+        for job in jobs:
+            creation_date = datetime.fromtimestamp(job.get_post().created)
+            post_age = datetime.now() - creation_date
+            is_recent_post = post_age > timedelta(days=Config.POST_MAX_AGE_DAYS)
+            if job.get_post().url is not None and is_recent_post:
+                filtered_jobs.append(job)
+        return filtered_jobs
             
     def __try_until_timeout(self, func):
         start_time = time.time()
@@ -114,30 +113,19 @@ class Bot:
             job.reply(comment)
             self.lock.release()
             
-    def __update_database_summary(self):
-        time_since_last_summary = self.db.get_time_diff_since_last_summary()
-        Logger.log_summary_time(time_since_last_summary)
-        if time_since_last_summary > timedelta(hours=Config.DATABASE_SUMMARY_INTERVAL_HOURS):
-            summary = self.db.get_summary()
-            self.db.delete_old_summaries_if_db_full()
-            self.db.persist_summary(summary)
-            self.__send_summary_to_creator(summary)
-            
-    def __send_summary_to_creator(self, summary):
-        posts_seen = summary[0]
-        tweets_found = summary[1]
-        message = "New Summary:\n\nPosts Seen: {}\nTweets Found: {}".format(str(posts_seen), str(tweets_found))
-        self.lock.acquire()
-        self._praw_client.redditor(Config.CREATOR_NAME).message("Summary", message)
-        self.lock.release()
+    # def send_summary_to(self, summary: str,):
+    #     posts_seen = summary[0]
+    #     tweets_found = summary[1]
+    #     message = "New Summary:\n\nPosts Seen: {}\nTweets Found: {}".format(str(posts_seen), str(tweets_found))
+    #     self.lock.acquire()
+    #     self._praw_client.redditor(Config.CREATOR_NAME).message("Summary", message)
+    #     self.lock.release()
 
-    @staticmethod
-    def __form_comment_response(results: List[TweetCandidate]):
+    def __form_comment_response(self, results: List[TweetCandidate]):
         formatted_tweets = map(lambda r: self.__format_candidate(results.index(r), r), results)
         single_tweets_string = "\n".join(list(formatted_tweets))
         bot_response_comment = Config.RESULT_MESSAGE.format(single_tweets_string)
         return bot_response_comment
 
-    @staticmethod
-    def __format_candidate(index, candidate: TweetCandidate):
+    def __format_candidate(self, index: int, candidate: TweetCandidate):
         return f"{Config.SINGLE_TWEET.format(index + 1, candidate.score, candidate.tweet.url)}\n"

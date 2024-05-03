@@ -80,7 +80,7 @@ class Bot:
             self.db.add_submission_to_seen(post.id)
             
             
-    def __try_repeatedly_with_timeout(self, func):
+    def __try_until_timeout(self, func):
         start_time = time.time()
         too_many_tries_exception = True
         while too_many_tries_exception:
@@ -115,7 +115,7 @@ class Bot:
             self.lock.release()
             
     def __update_database_summary(self):
-        time_since_last_summary = db.get_time_diff_since_last_summary()
+        time_since_last_summary = self.db.get_time_diff_since_last_summary()
         Logger.log_summary_time(time_since_last_summary)
         if time_since_last_summary > timedelta(hours=Config.DATABASE_SUMMARY_INTERVAL_HOURS):
             summary = self.db.get_summary()
@@ -133,7 +133,7 @@ class Bot:
 
     @staticmethod
     def __form_comment_response(results: List[TweetCandidate]):
-        formatted_tweets = map(lambda r: DebugBot.__format_candidate(results.index(r), r), results)
+        formatted_tweets = map(lambda r: self.__format_candidate(results.index(r), r), results)
         single_tweets_string = "\n".join(list(formatted_tweets))
         bot_response_comment = Config.RESULT_MESSAGE.format(single_tweets_string)
         return bot_response_comment

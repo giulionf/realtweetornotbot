@@ -1,5 +1,5 @@
 class TweetCandidate:
-    """ Model for a search result """
+    """Model for a search result"""
 
     def __init__(self, criteria, tweet, score):
         self.criteria = criteria

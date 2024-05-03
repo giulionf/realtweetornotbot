@@ -4,15 +4,20 @@ import pytesseract
 from PIL import Image, ImageEnhance
 from threading import Lock
 
-MAX_RESOLUTION = 9000000    # the max. amount of pixels allowed when up-scaling an image for OCR
-ocr_lock = Lock()   # Only one thread should upscale the image at any given point to not overstep RAM limits
+MAX_RESOLUTION = (
+    9000000  # the max. amount of pixels allowed when up-scaling an image for OCR
+)
+ocr_lock = (
+    Lock()
+)  # Only one thread should upscale the image at any given point to not overstep RAM limits
 
 
 class ImageProcessor:
-    """ Helper class for extracting text out of an image url """
+    """Helper class for extracting text out of an image url"""
+
     @staticmethod
     def image_to_text(image_url):
-        """ Downloads the image and reads its text. If no text could be read, it will return an empty string """
+        """Downloads the image and reads its text. If no text could be read, it will return an empty string"""
         ocr_lock.acquire()
         image = ImageProcessor.__get_image(image_url)
         if image:
@@ -34,7 +39,7 @@ class ImageProcessor:
 
     @staticmethod
     def __optimize(image):
-        image = image.convert('L')
+        image = image.convert("L")
         image = ImageProcessor.__scale_to_working_size(image)
         image = ImageEnhance.Contrast(image).enhance(2)
         return image
@@ -43,7 +48,7 @@ class ImageProcessor:
     def __scale_to_working_size(image):
         width = float(image.size[0])
         height = float(image.size[1])
-        ratio = width/height
-        new_height = int((MAX_RESOLUTION/ratio)**0.5)
+        ratio = width / height
+        new_height = int((MAX_RESOLUTION / ratio) ** 0.5)
         new_width = int(new_height * ratio)
         return image.resize((new_width, new_height), Image.ANTIALIAS)

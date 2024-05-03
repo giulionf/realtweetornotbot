@@ -6,7 +6,7 @@ pop_lock = Lock()  # Lock for popping the top of the post_queue
 
 
 class MultiThreadSearcher:
-    """ Multi-threading scheduler for the bot """
+    """Multi-threading scheduler for the bot"""
 
     def __init__(self, bot):
         self.bot = bot
@@ -14,20 +14,22 @@ class MultiThreadSearcher:
         self.workers = []
 
     def schedule(self):
-        """ Fetches new posts. Uses the already running workers or starts new ones if needed """
+        """Fetches new posts. Uses the already running workers or starts new ones if needed"""
         self.__get_new_jobs()
-        additional_workers_needed = min(Config.WORKER_COUNT, len(self.job_queue)) - len(self.workers)
+        additional_workers_needed = min(Config.WORKER_COUNT, len(self.job_queue)) - len(
+            self.workers
+        )
         if additional_workers_needed > 0:
             for i in range(0, additional_workers_needed):
                 self.__create_new_worker()
 
     def remove_worker(self, worker):
-        """ Removes a worker from the list of workers. Will not terminate that worker if it hasn't finished! """
+        """Removes a worker from the list of workers. Will not terminate that worker if it hasn't finished!"""
         self.workers.remove(worker)
         print("Removed Workers, {} workers left".format(len(self.workers)))
 
     def pop_next_job(self):
-        """ Pops the next post out of the post queue """
+        """Pops the next post out of the post queue"""
         pop_lock.acquire()
         if len(self.job_queue) > 0:
             job = self.job_queue[0]
@@ -48,7 +50,7 @@ class MultiThreadSearcher:
         worker.start()
 
     class Worker(Thread):
-        """ Worker Thread for a post. Once it's done, it will reschedule itself with a new post or terminate """
+        """Worker Thread for a post. Once it's done, it will reschedule itself with a new post or terminate"""
 
         def __init__(self, job, scheduler, bot):
             super().__init__()

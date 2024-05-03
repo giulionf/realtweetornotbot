@@ -1,18 +1,25 @@
-from realtweetornotbot.ocranalysis import ContentProcessor, DateProcessor, ImageProcessor, UserProcessor
-from realtweetornotbot.twittersearch import Criteria
+
+
+from ocranalysis.contentprocessor import ContentProcessor
+from ocranalysis.dateprocessor import DateProcessor
+from ocranalysis.imageprocessor import ImageProcessor
+from ocranalysis.userprocessor import UserProcessor
+from twittersearch.criteria import Criteria
 
 
 class CriteriaBuilder:
-    """ Builder for the criteria model """
+    """Builder for the criteria model"""
 
     @staticmethod
     def image_to_search_criteria_candidates(image_url):
-        """ Converts an url to an image of a tweet to a list of possible search criteria """
+        """Converts an url to an image of a tweet to a list of possible search criteria"""
         ocr_text = ImageProcessor.image_to_text(image_url)
         users_found = UserProcessor.find_users(ocr_text)
         dates_found = DateProcessor.find_dates(ocr_text)
         content_found = ContentProcessor.find_content(ocr_text)
-        candidates = CriteriaBuilder.__create_criteria_candidates(users_found, dates_found, content_found)
+        candidates = CriteriaBuilder.__create_criteria_candidates(
+            users_found, dates_found, content_found
+        )
         return candidates
 
     @staticmethod

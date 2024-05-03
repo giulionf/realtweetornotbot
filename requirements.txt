@@ -3,3 +3,5 @@ praw~=7.1.1
 psycopg2-binary~=2.9.9
 rapidfuzz~=3.9
 pytesseract~=0.3.10
+black~=24.4.2
+ruff~=0.4.2

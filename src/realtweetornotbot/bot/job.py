@@ -10,6 +10,9 @@ class BaseJob:
     def get_post(self) -> praw.Reddit.post:
         raise NotImplementedError()
     
+    def reply(self, comment: str) -> None:
+        raise NotImplementedError()
+    
     
 class PostJob(BaseJob):
     def __init__(self, post: praw.Reddit.post) -> None:
@@ -18,6 +21,9 @@ class PostJob(BaseJob):
     
     def get_post(self) -> praw.Reddit.post:
         return self.post
+    
+    def reply(self, comment: str) -> None:
+        self.post.reply(comment)
     
 
 class CommentJob(BaseJob):
@@ -28,3 +34,6 @@ class CommentJob(BaseJob):
         
     def get_post(self) -> praw.Reddit.post:
         return self.comment.submission
+    
+    def reply(self, comment: str) -> None:
+        self.comment.reply(comment)

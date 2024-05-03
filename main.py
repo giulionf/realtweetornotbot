@@ -21,8 +21,7 @@ def main(args: Dict):
     db = Database()
     bot = Bot(api=api, db=db, subreddits="all")
     jobs = bot.fetch_jobs()
-    for job in jobs:
-        logging.info(job.get_post())
+    # UNTIL TWITTER API ALLOWS FETCHING AGAIN THIS IS WHERE IT ENDS...
 
 
 if __name__ == "__main__":

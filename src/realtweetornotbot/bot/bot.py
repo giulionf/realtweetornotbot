@@ -8,8 +8,8 @@ from realtweetornotbot.twittersearch import TweetFinder
 from realtweetornotbot.utils import Logger, UrlUtils
 from realtweetornotbot.bot import Config
 from src.realtweetornotbot.bot.job import BaseJob, CommentJob, PostJob
-from src.realtweetornotbot.twittersearch.searchresult import SearchResult, TweetCandidate
-from realtweetornotbot.persistance.base import Database
+from src.realtweetornotbot.twittersearch.searchresult import TweetCandidate
+from realtweetornotbot.persistance.database import Database
 
 ATTEMPT_TIMEOUT = 30
 MAX_TIMEOUT = 11 * 60

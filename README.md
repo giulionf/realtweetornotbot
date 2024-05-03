@@ -1,4 +1,6 @@
 # RealTweetOrNotBot
+*NOTE* This repository is unfortunately retired as the Twitter API does not allow reading tweets in free tier anymore.
+
 The [Reddit](https://www.reddit.com/r/realtweetornotbot/) Tweet Finder Bot
 
 The bot is currently (13th of December 2019) ranked as the number one bot on Reddit by the unofficial [Reddit bot Ranking](https://botrank.pastimes.eu/)! 

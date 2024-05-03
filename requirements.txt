@@ -1,7 +1,4 @@
-Pillow>=9.0.0
-praw==7.2.0
-prawcore==2.0.0
-psycopg2-binary==2.8.6
-pytesseract==0.3.7
-rapidfuzz==1.4.1
-searchtweets-v2==1.0.7
+Pillow~=10.3.0
+praw~=7.1.1
+psycopg2-binary~=2.9.9
+rapidfuzz~=3.9
